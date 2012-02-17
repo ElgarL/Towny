@@ -200,16 +200,16 @@ public class TownyPlayerListener implements Listener {
 		}
 
 		Player player = event.getPlayer();
-		Location from;
-		try {
-			from = plugin.getCache(player).getLastLocation();
-		} catch (NullPointerException e) {
-			from = event.getFrom();
-		}
+		Location from = event.getFrom();
 		Location to = event.getTo();
 
-		if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ())
-			return;
+        if (from.getBlockX() == to.getBlockX()
+                && from.getBlockY() == to.getBlockY()
+                && from.getBlockZ() == to.getBlockZ()
+                && from.getWorld().equals(to.getWorld())) {
+            // Player didn't move by at least one block.
+            return;
+        }
 
 		// Prevent fly/double jump cheats
 		if (!(event instanceof PlayerTeleportEvent)) {
