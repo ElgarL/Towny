@@ -93,6 +93,7 @@ public class Towny extends JavaPlugin {
         }
 
         listenerManager = new ListenerManager(this);
+        questionManager = new QuestionManager();
 
         TownyLogger.log.info("=============================================================");
         if (isError()) {
