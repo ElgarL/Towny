@@ -58,7 +58,7 @@ import com.palmergames.util.StringMgmt;
 
 /**
  * Send a list of all town help commands to player
- * Command: /town
+ * Command: /region ?
  */
 
 public class TownCommand implements CommandExecutor {
@@ -68,19 +68,19 @@ public class TownCommand implements CommandExecutor {
 
 	static {
 		output.add(ChatTools.formatTitle("/town"));
-		output.add(ChatTools.formatCommand("", "/town", "", TownySettings.getLangString("town_help_1")));
-		output.add(ChatTools.formatCommand("", "/town", "[town]", TownySettings.getLangString("town_help_3")));
-		output.add(ChatTools.formatCommand("", "/town", "here", TownySettings.getLangString("town_help_4")));
-		output.add(ChatTools.formatCommand("", "/town", "list", ""));
-		output.add(ChatTools.formatCommand("", "/town", "online", TownySettings.getLangString("town_help_10")));
-		output.add(ChatTools.formatCommand("", "/town", "leave", ""));
-		output.add(ChatTools.formatCommand("", "/town", "spawn", TownySettings.getLangString("town_help_5")));
+		output.add(ChatTools.formatCommand("", "/region", "", TownySettings.getLangString("town_help_1")));
+		output.add(ChatTools.formatCommand("", "/region", "[town]", TownySettings.getLangString("town_help_3")));
+		output.add(ChatTools.formatCommand("", "/region", "here", TownySettings.getLangString("town_help_4")));
+		output.add(ChatTools.formatCommand("", "/region", "list", ""));
+		output.add(ChatTools.formatCommand("", "/region", "online", TownySettings.getLangString("town_help_10")));
+		output.add(ChatTools.formatCommand("", "/region", "leave", ""));
+		output.add(ChatTools.formatCommand("", "/region", "home", TownySettings.getLangString("town_help_5")));
 		if (!TownySettings.isTownCreationAdminOnly())
-			output.add(ChatTools.formatCommand("", "/town", "new [town]", TownySettings.getLangString("town_help_6")));
-		output.add(ChatTools.formatCommand(TownySettings.getLangString("admin_sing"), "/town", "new [town] " + TownySettings.getLangString("town_help_2"), TownySettings.getLangString("town_help_7")));
-		output.add(ChatTools.formatCommand(TownySettings.getLangString("res_sing"), "/town", "deposit [$]", ""));
-		output.add(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "mayor ?", TownySettings.getLangString("town_help_8")));
-		output.add(ChatTools.formatCommand(TownySettings.getLangString("admin_sing"), "/town", "delete [town]", ""));
+			output.add(ChatTools.formatCommand("", "/region", "create [town]", TownySettings.getLangString("town_help_6")));
+		output.add(ChatTools.formatCommand(TownySettings.getLangString("admin_sing"), "/region", "create [town] " + TownySettings.getLangString("town_help_2"), TownySettings.getLangString("town_help_7")));
+		output.add(ChatTools.formatCommand(TownySettings.getLangString("res_sing"), "/region", "deposit [$]", ""));
+		output.add(ChatTools.formatCommand(TownySettings.getLangString("Owner_sing"), "/region", "Owner ?", TownySettings.getLangString("town_help_8")));
+		output.add(ChatTools.formatCommand(TownySettings.getLangString("admin_sing"), "/region", "delete [town]", ""));
 	}
 
 	public TownCommand(Towny instance) {
@@ -195,7 +195,7 @@ public class TownCommand implements CommandExecutor {
 	}
 
 	/**
-	 * Send a list of all towns in the universe to player Command: /town list
+	 * Send a list of all towns in the universe to player Command: /region list
 	 * 
 	 * @param player
 	 */
@@ -269,33 +269,33 @@ public class TownCommand implements CommandExecutor {
 
 	public void showTownMayorHelp(Player player) {
 
-		player.sendMessage(ChatTools.formatTitle("Town Mayor Help"));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "withdraw [$]", ""));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "claim", "'/town claim ?' " + TownySettings.getLangString("res_5")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "unclaim", "'/town " + TownySettings.getLangString("res_5")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "[add/kick] " + TownySettings.getLangString("res_2") + " .. []", TownySettings.getLangString("res_6")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "[add+/kick+] " + TownySettings.getLangString("res_2"), TownySettings.getLangString("res_7")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "set [] .. []", "'/town set' " + TownySettings.getLangString("res_5")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "buy [] .. []", "'/town buy' " + TownySettings.getLangString("res_5")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "toggle", ""));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "assistant [add/remove] [player]", TownySettings.getLangString("res_6")));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "assistant [add+/remove+] [player]", TownySettings.getLangString("res_7")));
+		player.sendMessage(ChatTools.formatTitle("Town Owner Help"));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "withdraw [$]", ""));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "claim", "'/town claim ?' " + TownySettings.getLangString("res_5")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "unclaim", "'/town " + TownySettings.getLangString("res_5")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region"," "[invite/kick] " + TownySettings.getLangString("res_2") + " .. []", TownySettings.getLangString("res_6")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "[invite+/kick+] " + TownySettings.getLangString("res_2"), TownySettings.getLangString("res_7")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "set [] .. []", "'/town set' " + TownySettings.getLangString("res_5")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "buy [] .. []", "'/town buy' " + TownySettings.getLangString("res_5")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "toggle", ""));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "assistant [add/remove] [player]", TownySettings.getLangString("res_6")));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "assistant [add+/remove+] [player]", TownySettings.getLangString("res_7")));
 		// TODO: player.sendMessage(ChatTools.formatCommand("Mayor", "/town", "wall [type] [height]", ""));
 		// TODO: player.sendMessage(ChatTools.formatCommand("Mayor", "/town", "wall remove", ""));
-		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town", "delete", ""));
+		player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region", "delete", ""));
 	}
 
 	public void townToggle(Player player, String[] split) {
 
 		if (split.length == 0) {
-			player.sendMessage(ChatTools.formatTitle("/town toggle"));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "pvp", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "public", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "explosion", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "fire", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "mobs", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "taxpercent", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town toggle", "open", ""));
+			player.sendMessage(ChatTools.formatTitle("/region toggle"));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "pvp", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "public", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "explosion", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "fire", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "mobs", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "taxpercent", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region toggle", "open", ""));
 		} else {
 			Resident resident;
 			Town town;
@@ -414,22 +414,22 @@ public class TownCommand implements CommandExecutor {
 	public void townSet(Player player, String[] split) {
 
 		if (split.length == 0) {
-			player.sendMessage(ChatTools.formatTitle("/town set"));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "board [message ... ]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "mayor " + TownySettings.getLangString("town_help_2"), ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "homeblock", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "spawn/outpost", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "perm ...", "'/town set perm' " + TownySettings.getLangString("res_5")));
-			//player.sendMessage(ChatTools.formatCommand("", "/town set", "pvp [on/off]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "taxes [$]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "[plottax/shoptax/embassytax] [$]", ""));
-			//player.sendMessage(ChatTools.formatCommand("", "/town set", "shoptax [$]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "[plotprice/shopprice/embassyprice] [$]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "name [name]", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/town set", "tag [upto 4 letters] or clear", ""));
-			//player.sendMessage(ChatTools.formatCommand("", "/town set", "public [on/off]", ""));
-			//player.sendMessage(ChatTools.formatCommand("", "/town set", "explosion [on/off]", ""));
-			//player.sendMessage(ChatTools.formatCommand("", "/town set", "fire [on/off]", ""));
+			player.sendMessage(ChatTools.formatTitle("/region set"));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "board [message ... ]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "Owner " + TownySettings.getLangString("town_help_2"), ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "homeblock", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "home/outpost", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "perm ...", "'/town set perm' " + TownySettings.getLangString("res_5")));
+			//player.sendMessage(ChatTools.formatCommand("", "/region set", "pvp [on/off]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "taxes [$]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "[plottax/shoptax/embassytax] [$]", ""));
+			//player.sendMessage(ChatTools.formatCommand("", "/region set", "shoptax [$]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "[plotprice/shopprice/embassyprice] [$]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "name [name]", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/region set", "tag [upto 4 letters] or clear", ""));
+			//player.sendMessage(ChatTools.formatCommand("", "/region set", "public [on/off]", ""));
+			//player.sendMessage(ChatTools.formatCommand("", "/region set", "explosion [on/off]", ""));
+			//player.sendMessage(ChatTools.formatCommand("", "/region set", "fire [on/off]", ""));
 		} else {
 			Resident resident;
 			Town town = null;
@@ -441,7 +441,7 @@ public class TownCommand implements CommandExecutor {
 				town = resident.getTown();
 				if (!resident.isMayor())
 					if (!town.hasAssistant(resident))
-						throw new TownyException(TownySettings.getLangString("msg_not_mayor_ass"));
+						throw new TownyException(TownySettings.getLangString("msg_not_Owner_ass"));
 				if (town.hasNation())
 					nation = town.getNation();
 			} catch (TownyException x) {
@@ -452,7 +452,7 @@ public class TownCommand implements CommandExecutor {
 			// TODO: Let admin's call a subfunction of this.
 			if (split[0].equalsIgnoreCase("board")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set board " + TownySettings.getLangString("town_help_9"));
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set board " + TownySettings.getLangString("town_help_9"));
 					return;
 				} else {
 					String line = split[1];
@@ -461,9 +461,9 @@ public class TownCommand implements CommandExecutor {
 					town.setTownBoard(line);
 					TownyMessaging.sendTownBoard(player, town);
 				}
-			} else if (split[0].equalsIgnoreCase("mayor")) {
+			} else if (split[0].equalsIgnoreCase("Owner")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set mayor Dumbo");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set Owner Dumbo");
 					return;
 				} else
 					try {
@@ -482,7 +482,7 @@ public class TownCommand implements CommandExecutor {
 					}
 			} else if (split[0].equalsIgnoreCase("taxes")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set taxes 7");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set taxes 7");
 					return;
 				} else {
 					try {
@@ -504,7 +504,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("plottax")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set plottax 10");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set plottax 10");
 					return;
 				} else {
 					try {
@@ -522,7 +522,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("shoptax")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set shoptax 10");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set shoptax 10");
 					return;
 				} else {
 					try {
@@ -540,7 +540,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("embassytax")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set embassytax 10");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set embassytax 10");
 					return;
 				} else {
 					try {
@@ -558,7 +558,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("plotprice")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set plotprice 50");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set plotprice 50");
 					return;
 				} else {
 					try {
@@ -576,7 +576,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("shopprice")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set shopprice 50");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set shopprice 50");
 					return;
 				} else {
 					try {
@@ -594,7 +594,7 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("embassyprice")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set embassyprice 50");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set embassyprice 50");
 					return;
 				} else {
 					try {
@@ -612,14 +612,14 @@ public class TownCommand implements CommandExecutor {
 				}
 			} else if (split[0].equalsIgnoreCase("name")) {
 				if (split.length < 2) {
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set name BillyBobTown");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set name BillyBobTown");
 					return;
 				} else if (plugin.isPermissions() && (!TownyUniverse.getPermissionSource().has(player, PermissionNodes.TOWNY_TOWN_RENAME.getNode()))) {
 					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_err_command_disable"));
 					return;
 				}
 
-				//TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_town_rename_disabled"));
+				//TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_region_rename_disabled"));
 				if (!NameValidation.isBlacklistName(split[1]))
 					townRename(player, town, split[1]);
 				else
@@ -627,7 +627,7 @@ public class TownCommand implements CommandExecutor {
 
 			} else if (split[0].equalsIgnoreCase("tag")) {
 				if (split.length < 2)
-					TownyMessaging.sendErrorMsg(player, "Eg: /town set tag PLTC");
+					TownyMessaging.sendErrorMsg(player, "Eg: /region set tag PLTC");
 				else if (split[1].equalsIgnoreCase("clear")) {
 					try {
 						town.setTag(" ");
@@ -668,7 +668,7 @@ public class TownCommand implements CommandExecutor {
 					TownyMessaging.sendErrorMsg(player, e.getMessage());
 					return;
 				}
-			} else if (split[0].equalsIgnoreCase("spawn")) {
+			} else if (split[0].equalsIgnoreCase("home")) {
 				try {
 					town.setSpawn(player.getLocation());
 					TownyMessaging.sendMsg(player, TownySettings.getLangString("msg_set_town_spawn"));
@@ -719,7 +719,7 @@ public class TownCommand implements CommandExecutor {
 	public void townBuy(Player player, String[] split) {
 
 		if (split.length == 0) {
-			player.sendMessage(ChatTools.formatTitle("/town buy"));
+			player.sendMessage(ChatTools.formatTitle("/region buy"));
 			if (TownySettings.isSellingBonusBlocks()) {
 				String line = Colors.Yellow + "[Purchased Bonus] " + Colors.Green + "Cost: " + Colors.LightGreen + "%s" + Colors.Gray + " | " + Colors.Green + "Max: " + Colors.LightGreen + "%d";
 				player.sendMessage(String.format(line, TownyEconomyHandler.getFormattedBalance(TownySettings.getPurchasedBonusBlocksCost()), TownySettings.getMaxPurchedBlocks()));
@@ -802,7 +802,7 @@ public class TownCommand implements CommandExecutor {
 	}
 
 	/**
-	 * Create a new town. Command: /town new [town] *[mayor]
+	 * Create a new town. Command: /region create [town] *[mayor]
 	 * 
 	 * @param player
 	 */
@@ -890,7 +890,7 @@ public class TownCommand implements CommandExecutor {
 			TownyRegenAPI.addPlotChunkSnapshot(plotChunk); // Save a snapshot.
 			plotChunk = null;
 		}
-		TownyMessaging.sendDebugMsg("Creating new Town account: " + "town-" + name);
+		TownyMessaging.sendDebugMsg("Creating new Town account: " + "region-" + name);
 		if (TownySettings.isUsingEconomy()) {
 			town.setBalance(0);
 		}
@@ -976,13 +976,13 @@ public class TownCommand implements CommandExecutor {
 			} else {
 				// split.length > 1
 				town = TownyUniverse.getDataSource().getTown(split[0]);
-				notAffordMSG = String.format(TownySettings.getLangString("msg_err_cant_afford_tp_town"), town.getName());
+				notAffordMSG = String.format(TownySettings.getLangString("msg_err_cant_afford_tp_region"), town.getName());
 			}
 
 			if (outpost) {
 
 				if (!town.hasOutpostSpawn())
-					throw new TownyException(TownySettings.getLangString("msg_err_outpost_spawn"));
+					throw new TownyException(TownySettings.getLangString("msg_err_outpost_home"));
 
 				Integer index;
 				try {
@@ -1161,7 +1161,7 @@ public class TownCommand implements CommandExecutor {
 
 	/**
 	 * Confirm player is a mayor or assistant, then get list of filter names
-	 * with online players and kick them from town. Command: /town kick
+	 * with online players and kick them from town. Command: /region kick
 	 * [resident] .. [resident]
 	 * 
 	 * @param player
@@ -1336,7 +1336,7 @@ public class TownCommand implements CommandExecutor {
 
 	/**
 	 * Confirm player is a mayor or assistant, then get list of filter names
-	 * with online players and invite them to town. Command: /town add
+	 * with online players and invite them to town. Command: /region invite
 	 * [resident] .. [resident]
 	 * 
 	 * @param player
@@ -1392,7 +1392,7 @@ public class TownCommand implements CommandExecutor {
 
 	/**
 	 * Confirm player is a mayor or assistant, then get list of filter names
-	 * with online players and kick them from town. Command: /town kick
+	 * with online players and kick them from town. Command: /region kick
 	 * [resident] .. [resident]
 	 * 
 	 * @param player
@@ -1456,8 +1456,8 @@ public class TownCommand implements CommandExecutor {
 
 	/**
 	 * If no arguments are given (or error), send usage of command.
-	 * If sender is a player: args = [town].
-	 * Elsewise: args = [resident] [town]
+	 * If sender is a player: args = [region].
+	 * Elsewise: args = [resident] [region]
 	 * 
 	 * @param sender
 	 * @param args
@@ -1516,7 +1516,7 @@ public class TownCommand implements CommandExecutor {
 
 	/**
 	 * Confirm player is a mayor or assistant, then get list of filter names
-	 * with online players and invite them to town. Command: /town add
+	 * with online players and invite them to town. Command: /region invite
 	 * [resident] .. [resident]
 	 * 
 	 * @param sender
@@ -1782,9 +1782,9 @@ public class TownCommand implements CommandExecutor {
 
 		if (split.length == 1 && split[0].equalsIgnoreCase("?")) {
 			player.sendMessage(ChatTools.formatTitle("/town unclaim"));
-			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town unclaim", "", TownySettings.getLangString("mayor_help_6")));
-			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town unclaim", "[circle/rect] [radius]", TownySettings.getLangString("mayor_help_7")));
-			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/town unclaim", "all", TownySettings.getLangString("mayor_help_8")));
+			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region unclaim", "", TownySettings.getLangString("mayor_help_6")));
+			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region unclaim", "[circle/rect] [radius]", TownySettings.getLangString("mayor_help_7")));
+			player.sendMessage(ChatTools.formatCommand(TownySettings.getLangString("mayor_sing"), "/region unclaim", "all", TownySettings.getLangString("mayor_help_8")));
 		} else {
 			Resident resident;
 			Town town;
@@ -1986,7 +1986,7 @@ public class TownCommand implements CommandExecutor {
 			if (amount < 0)
 				throw new TownyException(TownySettings.getLangString("msg_err_negative_money"));
 
-			if (!resident.payTo(amount, town, "Town Deposit"))
+			if (!resident.payTo(amount, town, "region Deposit"))
 				throw new TownyException(TownySettings.getLangString("msg_insuf_funds"));
 
 			TownyMessaging.sendTownMessage(town, String.format(TownySettings.getLangString("msg_xx_deposited_xx"), resident.getName(), amount, "town"));
