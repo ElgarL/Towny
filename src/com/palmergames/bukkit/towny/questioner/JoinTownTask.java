@@ -1,7 +1,10 @@
 package com.palmergames.bukkit.towny.questioner;
 
+import org.bukkit.Bukkit;
+
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.event.ResidentJoinEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -20,6 +23,8 @@ public class JoinTownTask extends ResidentTownQuestionTask {
 	public void run() {
 
 		try {
+			ResidentJoinEvent Residentjoin = new ResidentJoinEvent(resident, town);
+			Bukkit.getServer().getPluginManager().callEvent(Residentjoin);
 			town.addResident(resident);
 			towny.deleteCache(resident.getName());
 			TownyUniverse.getDataSource().saveResident(resident);

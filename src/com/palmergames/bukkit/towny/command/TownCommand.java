@@ -27,6 +27,8 @@ import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyTimerHandler;
+import com.palmergames.bukkit.towny.event.ResidentJoinEvent;
+import com.palmergames.bukkit.towny.event.ResidentKickEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.EmptyTownException;
@@ -940,6 +942,8 @@ public class TownCommand implements CommandExecutor {
 		}
 
 		try {
+			ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+			Bukkit.getServer().getPluginManager().callEvent(Residentleave);
 			town.removeResident(resident);
 		} catch (EmptyTownException et) {
 			TownyUniverse.getDataSource().removeTown(et.getTown());
@@ -1163,7 +1167,6 @@ public class TownCommand implements CommandExecutor {
 	 * Confirm player is a mayor or assistant, then get list of filter names
 	 * with online players and kick them from town. Command: /town kick
 	 * [resident] .. [resident]
-	 * 
 	 * @param player
 	 * @param names
 	 */
@@ -1182,7 +1185,6 @@ public class TownCommand implements CommandExecutor {
 			TownyMessaging.sendErrorMsg(player, x.getMessage());
 			return;
 		}
-
 		townKickResidents(player, resident, town, plugin.getTownyUniverse().getValidatedResidents(player, names));
 
 		// Reset everyones cache permissions as this player leaving can affect multiple areas.
@@ -1286,6 +1288,8 @@ public class TownCommand implements CommandExecutor {
 			}
 		} else
 			try {
+				ResidentJoinEvent Residentjoin = new ResidentJoinEvent(newMember, town);
+				Bukkit.getServer().getPluginManager().callEvent(Residentjoin);
 				townAddResident(town, newMember);
 			} catch (AlreadyRegisteredException e) {
 			}
@@ -1304,6 +1308,8 @@ public class TownCommand implements CommandExecutor {
 				remove.add(member);
 			else
 				try {
+					ResidentKickEvent Residentleave = new ResidentKickEvent(member);
+					Bukkit.getServer().getPluginManager().callEvent(Residentleave);
 					town.removeResident(member);
 					plugin.deleteCache(member.getName());
 					TownyUniverse.getDataSource().saveResident(member);
@@ -1317,6 +1323,7 @@ public class TownCommand implements CommandExecutor {
 
 		for (Resident member : remove)
 			kicking.remove(member);
+				
 
 		if (kicking.size() > 0) {
 			String msg = "";
@@ -1434,7 +1441,7 @@ public class TownCommand implements CommandExecutor {
 		// remove invalid names so we don't try to send them messages                   
 		if (remove.size() > 0)
 			for (Resident member : remove)
-				toKick.remove(member);
+				toKick.remove(member); 	
 
 		if (toKick.size() > 0) {
 			String msg = "";

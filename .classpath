@@ -2,16 +2,16 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="../lib/bpermissions.jar"/>
-	<classpathentry kind="lib" path="../lib/Essentials.jar"/>
-	<classpathentry kind="lib" path="../lib/EssentialsGroupManager.jar"/>
-	<classpathentry kind="lib" path="../lib/iConomy.jar"/>
-	<classpathentry kind="lib" path="../lib/Permissions.jar"/>
-	<classpathentry kind="lib" path="../lib/PermissionsEx.jar"/>
-	<classpathentry kind="lib" path="../lib/Questioner.jar"/>
-	<classpathentry kind="lib" path="../lib/Register.jar"/>
-	<classpathentry kind="lib" path="../lib/bukkit.jar"/>
-	<classpathentry kind="lib" path="../lib/citizensapi-2.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="../lib/Vault.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/Skicraft to Dedicated/Minecraft/plugins/Permissions.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/Skicraft to Dedicated/Minecraft/plugins/PermissionsEx.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/Skicraft to Dedicated/Minecraft/plugins/Questioner.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/Skicraft to Dedicated/Minecraft/plugins/Register.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/Skicraft to Dedicated/Minecraft/plugins/Vault.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/craftbukkit.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/plugins/iConomy.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/plugins/bPermissions.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/plugins/EssentialsGroupManager.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/plugins/citizensapi-2.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Scott/Desktop/1.2.5 towny/plugins/Essentials.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

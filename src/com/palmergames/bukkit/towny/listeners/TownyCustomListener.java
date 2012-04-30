@@ -11,6 +11,7 @@ import com.palmergames.bukkit.towny.object.CellBorder;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.bukkit.towny.utils.BorderUtil;
 import com.palmergames.bukkit.util.DrawSmokeTaskFactory;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
