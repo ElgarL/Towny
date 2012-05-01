@@ -28,6 +28,7 @@ import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.TownyWorld;
+import com.palmergames.bukkit.util.BukkitTools;
 
 public class DailyTimerTask extends TownyTimerTask {
 
@@ -290,7 +291,8 @@ public class DailyTimerTask extends TownyTimerTask {
 						}
 						if (!resident.payTo(townBlock.getType().getTax(town), town, String.format("Plot Tax (%s)", townBlock.getType()))) {
 							TownyMessaging.sendTownMessage(town, String.format(TownySettings.getLangString("msg_couldnt_pay_plot_taxes"), resident));
-
+							ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+							BukkitTools.getServer().getPluginManager().callEvent(Residentleave);
 							townBlock.setResident(null);
 							townBlock.setPlotPrice(-1);
 
