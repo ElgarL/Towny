@@ -10,10 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.bukkit.Bukkit;
+
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyEconomyHandler;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.event.ResidentKickEvent;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.EmptyNationException;
 import com.palmergames.bukkit.towny.exceptions.EmptyTownException;
@@ -25,6 +28,7 @@ import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.TownyWorld;
+import com.palmergames.bukkit.util.BukkitTools;
 
 public class DailyTimerTask extends TownyTimerTask {
 
@@ -233,6 +237,8 @@ public class DailyTimerTask extends TownyTimerTask {
 						TownyMessaging.sendTownMessage(town, TownySettings.getCouldntPayTaxesMsg(resident, "town"));
 						try {
 							//town.removeResident(resident);
+							ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+							Bukkit.getServer().getPluginManager().callEvent(Residentleave);
 							resident.clear();
 						} catch (EmptyTownException e) {
 							// Mayor doesn't pay taxes so will always have 1.
@@ -285,7 +291,8 @@ public class DailyTimerTask extends TownyTimerTask {
 						}
 						if (!resident.payTo(townBlock.getType().getTax(town), town, String.format("Plot Tax (%s)", townBlock.getType()))) {
 							TownyMessaging.sendTownMessage(town, String.format(TownySettings.getLangString("msg_couldnt_pay_plot_taxes"), resident));
-
+							ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+							BukkitTools.getServer().getPluginManager().callEvent(Residentleave);
 							townBlock.setResident(null);
 							townBlock.setPlotPrice(-1);
 
