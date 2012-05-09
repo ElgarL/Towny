@@ -1,10 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Towny" default="jar" basedir=".">
     <property name="build" value="bin"/>
+    <property name="build.main" value="${build}/main"/>
+    <property name="test.build" value="${build}/test"/>
     <property name="test.server" value="${build}/test-server"/>
     <property name="test.src" value="test"/>
     <property name="test.report" value="${build}/test-reports"/>
     <property file="build.properties"/>
+
+    <path id="classpath.base">
+        <pathelement location="${env.LIB}/bukkit.jar"/>
+        <pathelement location="${env.LIB}/craftbukkit.jar"/>
+        <pathelement location="${env.LIB}/bpermissions.jar"/>
+        <pathelement location="${env.LIB}/Essentials.jar"/>
+        <pathelement location="${env.LIB}/EssentialsGroupManager.jar"/>
+        <pathelement location="${env.LIB}/Permissions.jar"/>
+        <pathelement location="${env.LIB}/PermissionsEx.jar"/>
+        <pathelement location="${env.LIB}/PermissionsBukkit.jar"/>
+        <pathelement location="${env.LIB}/Register.jar"/>
+        <pathelement location="${env.LIB}/iConomy.jar"/>
+        <pathelement location="${env.LIB}/Questioner.jar"/>
+        <pathelement location="${env.LIB}/Vault.jar"/>
+        <pathelement location="${env.LIB}/citizensapi-2.0-SNAPSHOT.jar"/>
+    </path>
+    <path id="classpath.test">
+        <pathelement location="${test.build}"/>
+        <pathelement path="${java.class.path}"/>
+        <pathelement location="${env.LIB}/junit-4.11.jar"/>
+        <path refid="classpath.base"/>
+    </path>
     
     <target name="clean">
         <delete dir="${build}"/>
@@ -12,45 +36,32 @@
 
     <target name="init" depends="clean">
         <mkdir dir="${build}"/>
+        <mkdir dir="${build.main}"/>
+        <mkdir dir="${test.build}"/>
+        <mkdir dir="${test.report}"/>
+        <mkdir dir="${test.server}"/>
     </target>
     
     <target name="compile" depends="init">
         <!-- Compile the java code -->
-        <javac srcdir="src" destdir="${build}" includeantruntime="false" target="1.6" source="1.6">
-            <classpath>
-                <pathelement location="${env.LIB}/bukkit.jar"/>
-                <pathelement location="${env.LIB}/craftbukkit.jar"/>
-                <pathelement location="${env.LIB}/bpermissions.jar"/>
-                <pathelement location="${env.LIB}/Essentials.jar"/>
-                <pathelement location="${env.LIB}/EssentialsGroupManager.jar"/>
-                <pathelement location="${env.LIB}/Permissions.jar"/>
-                <pathelement location="${env.LIB}/PermissionsEx.jar"/>
-                <pathelement location="${env.LIB}/PermissionsBukkit.jar"/>
-                <pathelement location="${env.LIB}/Register.jar"/>
-                <pathelement location="${env.LIB}/iConomy.jar"/>
-                <pathelement location="${env.LIB}/Questioner.jar"/>
-                <pathelement location="${env.LIB}/Vault.jar"/>
-                <pathelement location="${env.LIB}/citizensapi-2.0-SNAPSHOT.jar"/>
-            </classpath>
+        <javac srcdir="src" destdir="${build.main}" includeantruntime="false" target="1.6" source="1.6">
+            <classpath refid="classpath.base"/>
         </javac>
     </target>
 
-    <target name="test" depends="compile">
+    <target name="compile-test" depends="compile">
+        <javac srcdir="${test.src}" verbose="$true" includeantruntime="false" destdir="${test.build}" target="1.6" source="1.6">
+            <classpath refid="classpath.test"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="compile-test">
         <mkdir dir="${test.report}"/>
         <mkdir dir="${test.server}"/>
         <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" dir="${test.server}">
-            <classpath>
-                <pathelement path="."/>
-                <pathelement path="${test.src}"/>
-                <pathelement path="${java.class.path}"/>
-                <pathelement location="${env.LIB}/junit-4.11.jar"/>
-            </classpath>
 
+            <classpath refid="classpath.test"/>
             <formatter type="plain"/>
-
-            <!--test name="my.test.TestCase" haltonfailure="yes" outfile="result">
-                <formatter type="xml"/>
-            </test-->
 
             <batchtest fork="yes" todir="${test.report}">
                 <fileset dir="${test.src}">
@@ -63,13 +74,13 @@
 
     <target name="jar" depends="test">
         <!-- Build the jar file -->
-        <jar basedir="${build}" destfile="${env.LIB}/Towny.jar">
-	        <fileset dir="./src" includes="ChangeLog.txt"/>
-        	<fileset dir="./src" includes="english.yml"/>
-        	<fileset dir="./src" includes="german.yml"/>
-        	<fileset dir="./src" includes="plugin.yml"/>
-          <fileset dir="./src" includes="spanish.yml"/>
-          <fileset dir="./src" includes="ToDo.txt"/>
+        <jar basedir="${build.main}" destfile="${env.LIB}/Towny.jar">
+            <fileset dir="./src" includes="ChangeLog.txt"/>
+            <fileset dir="./src" includes="english.yml"/>
+            <fileset dir="./src" includes="german.yml"/>
+            <fileset dir="./src" includes="plugin.yml"/>
+            <fileset dir="./src" includes="spanish.yml"/>
+            <fileset dir="./src" includes="ToDo.txt"/>
         </jar>
     </target>
 </project>

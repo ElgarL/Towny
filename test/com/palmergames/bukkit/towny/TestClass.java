@@ -1,5 +1,10 @@
 package com.palmergames.bukkit.towny;
 
-public class TestClass {
-    public static void main(String[] args) {}
+import junit.framework.TestCase;
+
+public class TestClass extends TestCase {
+
+    public void testSomething() {
+        assertTrue(1 == 1);
+    }
 }
