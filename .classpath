@@ -13,5 +13,17 @@
 	<classpathentry kind="lib" path="../lib/bukkit.jar"/>
 	<classpathentry kind="lib" path="../lib/citizensapi-2.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="../lib/Vault.jar"/>
+	<classpathentry kind="lib" path="../lib/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="../lib/easymock-3.0.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-api-easymock-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-api-mockito-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-api-support-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-module-junit4-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-module-junit4-common-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/mockito-all-1.8.5.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-core-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/powermock-reflect-1.4.9.jar"/>
+	<classpathentry kind="lib" path="../lib/javassist-3.14.0-GA.jar"/>
+	<classpathentry kind="lib" path="../lib/cglib-nodep-2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
