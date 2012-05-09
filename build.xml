@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Towny" default="jar" basedir=".">
     <property name="build" value="bin"/>
+    <property name="test.server" value="${build}/test-server"/>
+    <property name="test.src" value="test"/>
+    <property name="test.report" value="${build}/test-reports"/>
     <property file="build.properties"/>
     
     <target name="clean">
@@ -9,7 +12,7 @@
 
     <target name="init" depends="clean">
         <mkdir dir="${build}"/>
-    </target>   
+    </target>
     
     <target name="compile" depends="init">
         <!-- Compile the java code -->
@@ -30,9 +33,35 @@
                 <pathelement location="${env.LIB}/citizensapi-2.0-SNAPSHOT.jar"/>
             </classpath>
         </javac>
-    </target>   
-    
-    <target name="jar" depends="compile">
+    </target>
+
+    <target name="test" depends="compile">
+        <mkdir dir="${test.report}"/>
+        <mkdir dir="${test.server}"/>
+        <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" dir="${test.server}">
+            <classpath>
+                <pathelement path="."/>
+                <pathelement path="${test.src}"/>
+                <pathelement path="${java.class.path}"/>
+                <pathelement location="${env.LIB}/junit-4.11.jar"/>
+            </classpath>
+
+            <formatter type="plain"/>
+
+            <!--test name="my.test.TestCase" haltonfailure="yes" outfile="result">
+                <formatter type="xml"/>
+            </test-->
+
+            <batchtest fork="yes" todir="${test.report}">
+                <fileset dir="${test.src}">
+                    <include name="**/*Test*.java"/>
+                    <exclude name="**/AllTests.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="jar" depends="test">
         <!-- Build the jar file -->
         <jar basedir="${build}" destfile="${env.LIB}/Towny.jar">
 	        <fileset dir="./src" includes="ChangeLog.txt"/>
