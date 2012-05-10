@@ -25,8 +25,20 @@
     </path>
     <path id="classpath.test">
         <pathelement location="${test.build}"/>
+        <pathelement location="${build.main}"/>
         <pathelement path="${java.class.path}"/>
-        <pathelement location="${env.LIB}/junit-4.11.jar"/>
+        <pathelement location="${env.LIB}/junit-4.8.2.jar"/>
+        <pathelement location="${env.LIB}/easymock-3.0.jar"/>
+        <pathelement location="${env.LIB}/powermock-api-easymock-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/powermock-api-mockito-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/powermock-api-support-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/powermock-module-junit4-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/powermock-module-junit4-common-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/mockito-all-1.8.5.jar"/>
+        <pathelement location="${env.LIB}/powermock-core-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/powermock-reflect-1.4.9.jar"/>
+        <pathelement location="${env.LIB}/javassist-3.14.0-GA.jar"/>
+        <pathelement location="${env.LIB}/cglib-nodep-2.2.jar"/>
         <path refid="classpath.base"/>
     </path>
     
@@ -50,7 +62,7 @@
     </target>
 
     <target name="compile-test" depends="compile">
-        <javac srcdir="${test.src}" verbose="$true" includeantruntime="false" destdir="${test.build}" target="1.6" source="1.6">
+        <javac srcdir="${test.src}" verbose="$true" includeantruntime="false" destdir="${test.build}" target="1.6" source="1.6" >
             <classpath refid="classpath.test"/>
         </javac>
     </target>
@@ -58,7 +70,13 @@
     <target name="test" depends="compile-test">
         <mkdir dir="${test.report}"/>
         <mkdir dir="${test.server}"/>
-        <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" dir="${test.server}">
+        <copy file="./src/english.yml" todir="${test.build}"/>
+        <copy file="./src/german.yml" todir="${test.build}"/>
+        <copy file="./src/spanish.yml" todir="${test.build}"/>
+        <copy file="./src/ChangeLog.txt" todir="${test.build}"/>
+        <copy file="./src/plugin.yml" todir="${test.build}"/>
+        <copy file="./src/ToDo.txt" todir="${test.build}"/>
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" dir="${test.server}">
 
             <classpath refid="classpath.test"/>
             <formatter type="plain"/>
@@ -67,6 +85,8 @@
                 <fileset dir="${test.src}">
                     <include name="**/*Test*.java"/>
                     <exclude name="**/AllTests.java"/>
+                	<exclude name="**/MVTestLogFormatter.java"/>
+                    <exclude name="**/TestInstanceCreator.java"/>
                 </fileset>
             </batchtest>
         </junit>
