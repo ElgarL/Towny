@@ -70,12 +70,6 @@
     <target name="test" depends="compile-test">
         <mkdir dir="${test.report}"/>
         <mkdir dir="${test.server}"/>
-        <copy file="./src/english.yml" todir="${test.build}"/>
-        <copy file="./src/german.yml" todir="${test.build}"/>
-        <copy file="./src/spanish.yml" todir="${test.build}"/>
-        <copy file="./src/ChangeLog.txt" todir="${test.build}"/>
-        <copy file="./src/plugin.yml" todir="${test.build}"/>
-        <copy file="./src/ToDo.txt" todir="${test.build}"/>
         <junit printsummary="yes" haltonfailure="no" haltonerror="no" dir="${test.server}">
 
             <classpath refid="classpath.test"/>

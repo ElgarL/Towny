@@ -19,6 +19,8 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -48,14 +50,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.anyVararg;
+import static org.mockito.Mockito.*;
 
 @PrepareForTest({Towny.class})
 public class TestInstanceCreator {
@@ -63,6 +61,7 @@ public class TestInstanceCreator {
     private Server mockServer;
     private CommandSender commandSender;
     public Map<String, Player> players = new HashMap<String, Player>();
+    public Map<String, CommandExecutor> commandExecutorMap = new HashMap<String, CommandExecutor>();
 
     public static final File townyDirectory = new File("bin/test-server/plugins/towny-test");
     public static final File serverDirectory = new File("bin/test-server");
@@ -137,7 +136,7 @@ public class TestInstanceCreator {
             // Setup mock commands
             Answer<PluginCommand> commandAnswer = new Answer<PluginCommand>() {
                 public PluginCommand answer(InvocationOnMock invocation) throws Throwable {
-                    String arg;
+                    final String arg;
                     try {
                         arg = (String) invocation.getArguments()[0];
                     } catch (Exception e) {
@@ -145,10 +144,31 @@ public class TestInstanceCreator {
                     }
                     Constructor<PluginCommand> constructor = PluginCommand.class.getConstructor(String.class, Plugin.class);
                     constructor.setAccessible(true);
-                    return PowerMockito.spy(constructor.newInstance(arg, plugin));
+                    PluginCommand command = PowerMockito.spy(constructor.newInstance(arg, plugin));
+                    doAnswer(new Answer<Void>() {
+                        @Override
+                        public Void answer(InvocationOnMock invocation) throws Throwable {
+                            CommandExecutor executor;
+                            try {
+                                executor = (CommandExecutor) invocation.getArguments()[0];
+                                commandExecutorMap.put(arg, executor);
+                            } catch (Exception e) {
+                                return null;
+                            }
+                            return null;
+                        }
+                    }).when(command).setExecutor((CommandExecutor) anyObject());
+                    doAnswer(new Answer<CommandExecutor>() {
+                        @Override
+                        public CommandExecutor answer(InvocationOnMock invocation) throws Throwable {
+                            return commandExecutorMap.get(arg);
+                        }
+                    }).when(command).getExecutor();
+                    return command;
                 }
             };
             doAnswer(commandAnswer).when(plugin).getCommand(anyString());
+
             /* TODO Make a mock player if needed (probably)
             Answer<Player> playerAnswer = new Answer<Player>() {
                 public Player answer(InvocationOnMock invocation) throws Throwable {
