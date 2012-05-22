@@ -1296,8 +1296,6 @@ public class TownCommand implements CommandExecutor {
 			}
 		} else
 			try {
-				ResidentJoinEvent Residentjoin = new ResidentJoinEvent(newMember, town);
-				Bukkit.getServer().getPluginManager().callEvent(Residentjoin);
 				townAddResident(town, newMember);
 			} catch (AlreadyRegisteredException e) {
 			}
