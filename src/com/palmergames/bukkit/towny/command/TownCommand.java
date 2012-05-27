@@ -27,6 +27,9 @@ import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyTimerHandler;
+import com.palmergames.bukkit.towny.event.ResidentJoinEvent;
+import com.palmergames.bukkit.towny.event.ResidentKickEvent;
+import com.palmergames.bukkit.towny.event.TownRemoveEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.EmptyTownException;
@@ -941,6 +944,9 @@ public class TownCommand implements CommandExecutor {
 
 		try {
 			town.removeResident(resident);
+			ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+			Bukkit.getServer().getPluginManager().callEvent(Residentleave);
+			town.removeResident(resident);
 		} catch (EmptyTownException et) {
 			TownyUniverse.getDataSource().removeTown(et.getTown());
 
@@ -1139,7 +1145,8 @@ public class TownCommand implements CommandExecutor {
 					throw new TownyException(TownySettings.getLangString("msg_not_mayor"));
 				if (plugin.isPermissions() && (!TownyUniverse.getPermissionSource().has(player, PermissionNodes.TOWNY_TOWN_DELETE.getNode())))
 					throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
-
+				TownRemoveEvent townremove = new TownRemoveEvent(town);
+				Bukkit.getServer().getPluginManager().callEvent(townremove);
 				TownyUniverse.getDataSource().removeTown(town);
 				TownyMessaging.sendGlobalMessage(TownySettings.getDelTownMsg(town));
 			} catch (TownyException x) {
@@ -1151,6 +1158,8 @@ public class TownCommand implements CommandExecutor {
 				if (!TownyUniverse.getPermissionSource().isTownyAdmin(player))
 					throw new TownyException(TownySettings.getLangString("msg_err_admin_only_delete_town"));
 				Town town = TownyUniverse.getDataSource().getTown(split[0]);
+				TownRemoveEvent townremove = new TownRemoveEvent(town);
+				Bukkit.getServer().getPluginManager().callEvent(townremove);
 				TownyUniverse.getDataSource().removeTown(town);
 				TownyMessaging.sendGlobalMessage(TownySettings.getDelTownMsg(town));
 			} catch (TownyException x) {
@@ -1253,7 +1262,8 @@ public class TownCommand implements CommandExecutor {
 	}
 
 	public static void townAddResident(Town town, Resident resident) throws AlreadyRegisteredException {
-
+		ResidentJoinEvent Residentjoin = new ResidentJoinEvent(resident, town);
+		Bukkit.getServer().getPluginManager().callEvent(Residentjoin);
 		town.addResident(resident);
 		plugin.deleteCache(resident.getName());
 		TownyUniverse.getDataSource().saveResident(resident);
@@ -1304,6 +1314,8 @@ public class TownCommand implements CommandExecutor {
 				remove.add(member);
 			else
 				try {
+					ResidentKickEvent Residentleave = new ResidentKickEvent(resident);
+					Bukkit.getServer().getPluginManager().callEvent(Residentleave);
 					town.removeResident(member);
 					plugin.deleteCache(member.getName());
 					TownyUniverse.getDataSource().saveResident(member);
