@@ -858,6 +858,13 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 						nation.setNeutral(Boolean.parseBoolean(line));
 					} catch (Exception e) {
 					}
+				
+				line = kvFile.get("open");
+				if (line != null)
+					try {
+						nation.setOpen(Boolean.parseBoolean(line));
+					} catch (Exception e) {
+					}
 
 			} catch (Exception e) {
 				TownyMessaging.sendErrorMsg("Loading Error: Exception while reading nation file " + nation.getName());
@@ -1559,6 +1566,8 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 			fout.write("taxes=" + Double.toString(nation.getTaxes()) + newLine);
 			// Neutral
 			fout.write("neutral=" + Boolean.toString(nation.isNeutral()) + newLine);
+			// Open
+			fout.write("open=" + Boolean.toString(nation.isOpen()) + newLine);
 
 			return true;
 			
