@@ -43,11 +43,14 @@ public enum PermissionNodes {
 	TOWNY_TOGGLE_OPEN("towny.town.toggle.open"),
 
 	TOWNY_NATION_ALL("towny.nation.*"),
-
+	
 	TOWNY_NATION_NEW("towny.nation.new"),
 	TOWNY_NATION_DELETE("towny.nation.delete"),
 	TOWNY_NATION_RENAME("towny.nation.rename"),
 	TOWNY_NATION_GRANT_TITLES("towny.nation.grant-titles"),
+	
+	TOWNY_NATION_TOGGLE_ALL("towny.nation.toggle.*"),
+	TOWNY_NATION_TOGGLE_OPEN("towny.nation.toggle.open"),
 
 	TOWNY_WILD_ALL("towny.wild.*"),
 

@@ -19,12 +19,14 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 	private Town capital;
 	private double taxes;
 	private boolean neutral = false;
+	private boolean isOpen;
 	private String tag;
 
 	public Nation(String name) {
 
 		setName(name);
 		tag = "";
+		isOpen = TownySettings.getNationDefaultOpen();
 	}
 
 	public void setTag(String text) throws TownyException {
@@ -392,6 +394,16 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 		return false;
 	}
 
+	public void setOpen(boolean isOpen) {
+
+		this.isOpen = isOpen;
+	}
+
+	public boolean isOpen() {
+
+		return isOpen;
+	}
+	
 	public void withdrawFromBank(Resident resident, int amount) throws EconomyException, TownyException {
 
 		if (!isKing(resident) && !hasAssistant(resident))
