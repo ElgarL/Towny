@@ -938,24 +938,11 @@ public class NationCommand implements CommandExecutor {
 					// Remove any ally settings from the target nation
 					if (targetNation.hasAlly(nation))
 						nationAlly(player, targetNation, Arrays.asList(nation), false);
-					
-					// TO-DO Added by octagami
-					if (targetNation.getEnemies().contains(nation)) {
-						TownyMessaging.sendNationMessage(nation, ChatColor.RED + nation.getName() + " is now at war with " + targetNation.getName() + "!");
-						TownyMessaging.sendNationMessage(targetNation, ChatColor.RED + targetNation.getName() + " is now at war with " + nation.getName() + "!");
-					}
-
+				
 				} else if (nation.getEnemies().contains(targetNation)) {
 					nation.removeEnemy(targetNation);
 					TownyMessaging.sendNationMessage(targetNation, String.format(TownySettings.getLangString("msg_removed_enemy"), nation.getName()));
 					
-					add = false;
-					
-					// TO-DO Added by octagami
-					if (targetNation.getEnemies().contains(nation)) {
-						TownyMessaging.sendNationMessage(nation, ChatColor.RED + nation.getName() + " is no longer at war with " + targetNation.getName());
-						TownyMessaging.sendNationMessage(targetNation, ChatColor.RED + targetNation.getName() + " is no longer at war with " + nation.getName());
-					}
 				}
 
 			} catch (AlreadyRegisteredException e) {
