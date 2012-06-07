@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.naming.InvalidNameException;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -457,6 +456,9 @@ public class NationCommand implements CommandExecutor {
 				// Confirm the resident is currently in a town.
 				if (!resident.hasTown())
 					throw new Exception(String.format(TownySettings.getLangString("msg_err_must_belong_town"), contextualResidentName));
+				// Confirm the resident is mayor or assistant
+				if (!resident.isMayor() && !resident.getTown().hasAssistant(resident))
+					throw new TownyException(TownySettings.getLangString("msg_not_mayor_ass"));
 				town = resident.getTown();
 			} else {
 				town = TownyUniverse.getDataSource().getTown(townName);
