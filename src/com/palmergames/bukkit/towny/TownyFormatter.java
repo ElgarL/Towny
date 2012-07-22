@@ -227,8 +227,10 @@ public class TownyFormatter {
 
 		List<String> out = new ArrayList<String>();
 
-		// ___[ Azur Empire ]___
-		out.add(ChatTools.formatTitle(getFormattedName(nation)));
+		// ___[ Azur Empire (Open) ]___
+		String title = getFormattedName(nation);
+		title += (nation.isOpen() ? Colors.LightBlue + " (Open)" : "");
+		out.add(ChatTools.formatTitle(title));
 
 		// Bank: 534 coins
 		String line = "";

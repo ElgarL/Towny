@@ -126,7 +126,7 @@ public enum ConfigNodes {
 	TOWN_DEF_OPEN(
 			"town.default_open",
 			"false",
-			"# Default Open status of the town (are new towns open and joinable by anyone at creation?)"),
+			"# Default Open status of the town (are new towns open and joinable by anyone at creation?)"),	
 	TOWN_MAX_PURCHASED_BLOCKS(
 			"town.max_purchased_blocks",
 			"0",
@@ -164,6 +164,20 @@ public enum ConfigNodes {
 			"# Doing so after entering data will shift things unwantedly. Using smaller value will allow higher precision,",
 			"# at the cost of more work setting up. Also, extremely small values will render the caching done useless.",
 			"# Each cell is (town_block_size * town_block_size * 128) in size, with 128 being from bedrock to clouds."),
+	NATION(
+			"nation",
+			"",
+			"",
+			"############################################################",
+			"# +------------------------------------------------------+ #",
+			"# |             Default new nation settings              | #",
+			"# +------------------------------------------------------+ #",
+			"############################################################",
+			""),
+	NATION_DEF_OPEN(
+			"nation.default_open",
+			"false",
+			"# Default Open status of new nations (are new nations open and joinable by any town at creation?)"),					
 	NWS(
 			"new_world_settings",
 			"",
