@@ -201,18 +201,15 @@ public class TownySQLSource extends TownyFlatFileSource {
 		/*
 		 * Update the table structure for older databases.
 		 */
-		String resident_update = "IF EXISTS( SELECT NULL FROM INFORMATION_SCHEMA.COLUMNS "
-				+ "WHERE table_name = `" + tb_prefix + "RESIDENTS` "
-				+ "AND table_schema = `" + db_name + "` "
-				+ "AND column_name != `town-ranks`)  THEN "
-				+ "ALTER TABLE " + tb_prefix + "RESIDENTS (ADD "
-				+ "`town-ranks`  mediumtext,"
-				+ "`nation-ranks`  mediumtext"
-				+ ");";
-		
 		try {
+			
 			Statement s = cntx.createStatement();
-			s.executeUpdate(resident_update);
+			if(!getFieldExists("RESIDENTS", "town-ranks")){
+				s.executeUpdate( "ALTER TABLE " + tb_prefix + "RESIDENTS (ADD `town-ranks` mediumtext);" );
+			}
+			if(!getFieldExists("RESIDENTS", "nation-ranks")){
+				s.executeUpdate( "ALTER TABLE " + tb_prefix + "RESIDENTS (ADD `nation-ranks` mediumtext);" );
+			}
 			TownyMessaging.sendDebugMsg("Table RESIDENTS is updated!");
 		} catch (SQLException ee) {
 			TownyMessaging.sendErrorMsg("Error updating table RESIDENTS :" + ee.getMessage());
@@ -300,6 +297,34 @@ public class TownySQLSource extends TownyFlatFileSource {
 		}
 
 		TownyMessaging.sendDebugMsg("Checking done!");
+	}
+	
+	/**
+	 * Verify if a database table field exists
+	 * @param table_name
+	 * @param field_name
+	 * @return boolean
+	 */
+	protected boolean getFieldExists( String table_name, String field_name ){
+		
+		if(!table_name.isEmpty() && !field_name.isEmpty()){
+		
+			String field_check = "SHOW COLUMNS FROM  `" + tb_prefix + table_name + "`";
+			
+			try {
+				Statement s = cntx.createStatement();
+				s.executeQuery(field_check);
+				ResultSet rs = s.getResultSet();
+				while(rs.next()){
+					if(rs.getString("Field").equalsIgnoreCase(field_name)){
+						return true;
+					}
+				}
+			} catch (SQLException ee) {
+				// ?
+			}
+		}
+		return false;
 	}
 
 	/**
