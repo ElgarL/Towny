@@ -854,7 +854,10 @@ public class TownySQLSource extends TownyFlatFileSource {
 						}
 					}
 				}
-				nation.setCapital(getTown(rs.getString("capital")));
+				line = rs.getString("capital");
+				if (line != null) {
+					nation.setCapital(getTown(rs.getString("capital")));
+				}
 //				line = rs.getString("assistants");
 //				if (line != null) {
 //					tokens = line.split(",");
