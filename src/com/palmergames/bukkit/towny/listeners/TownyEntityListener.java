@@ -14,7 +14,7 @@ import org.bukkit.entity.Fireball;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
-import org.bukkit.entity.Painting;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
@@ -30,9 +30,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
-import org.bukkit.event.painting.PaintingBreakByEntityEvent;
-import org.bukkit.event.painting.PaintingBreakEvent;
-import org.bukkit.event.painting.PaintingPlaceEvent;
+import org.bukkit.event.hanging.*;
 
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyMessaging;
@@ -260,8 +258,25 @@ public class TownyEntityListener implements Listener {
 
 		switch (event.getEntity().getType()) {
 		
+		case WITHER:
+			try {
+				TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(event.getBlock().getWorld().getName());
+	
+				if (!townyWorld.isUsingTowny())
+					return;
+				
+				WorldCoord coord = new WorldCoord(townyWorld.getName(), Coord.parseCoord(event.getBlock().getLocation()));
+				if (!blockCanExplode(townyWorld, event.getBlock())) {
+					event.setCancelled(true);
+					return;
+				}
+				
+			} catch (NotRegisteredException e) {
+				// Failed to fetch world
+			}
+			break;
+	
 		case ENDERMAN:
-			
 			try {
 				TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(event.getBlock().getWorld().getName());
 	
@@ -282,7 +297,28 @@ public class TownyEntityListener implements Listener {
 		}
 
 	}
+   
+   
+	public boolean blockCanExplode(TownyWorld world, Block block) {
+		Coord coord = Coord.parseCoord(block);
+		if (world.isWarZone(coord) && !TownyWarConfig.isAllowingExplosionsInWarZone()) {
+			return false;
+		}
+		
+		try {
+			TownBlock townBlock = world.getTownBlock(coord);
+			if (world.isUsingTowny() && !world.isForceExpl()) {
+				if ((!townBlock.getPermissions().explosion) || (TownyUniverse.isWarTime() && TownySettings.isAllowWarBlockGriefing() && !townBlock.getTown().hasNation() && !townBlock.getTown().isBANG())) {
+					return false;
+				}
+			}
+		} catch (NotRegisteredException e) {
+			return world.isExpl();
+		}
+		return true;
+	}
 
+	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent event) {
 
@@ -319,15 +355,11 @@ public class TownyEntityListener implements Listener {
 		for (Block block : blocks) {
 			coord = Coord.parseCoord(block.getLocation());
 			count++;
-
-			// Warzones
-			if (townyWorld.isWarZone(coord)) {
-				if (!TownyWarConfig.isAllowingExplosionsInWarZone()) {
-					if (event.getEntity() != null)
-						TownyMessaging.sendDebugMsg("onEntityExplode: Canceled " + event.getEntity().getEntityId() + " from exploding within " + coord.toString() + ".");
-					event.setCancelled(true);
-					return;
-				} else {
+			if (!blockCanExplode(townyWorld, block)) {
+				event.setCancelled(true);
+				return;
+			} else {
+				if (townyWorld.isWarZone(coord) && TownyWarConfig.isAllowingExplosionsInWarZone()) {
 					if (TownyWarConfig.explosionsBreakBlocksInWarZone()) {
 						if (TownyWarConfig.regenBlocksAfterExplosionInWarZone()) {
 							// ***********************************
@@ -354,30 +386,13 @@ public class TownyEntityListener implements Listener {
 							// TODO
 							// ***********************************
 						}
-
 						// Break the block
 					} else {
 						event.blockList().remove(block);
 					}
+					continue;
 				}
-				return;
-			}
-
-			//TODO: expand to protect neutrals during a war
-			try {
-				TownBlock townBlock = townyWorld.getTownBlock(coord);
-
-				// If explosions are off, or it's wartime and explosions are off and the towns has no nation
-				if (townyWorld.isUsingTowny() && !townyWorld.isForceExpl()) {
-					if ((!townBlock.getPermissions().explosion) || (TownyUniverse.isWarTime() && TownySettings.isAllowWarBlockGriefing() && !townBlock.getTown().hasNation() && !townBlock.getTown().isBANG())) {
-						if (event.getEntity() != null)
-							TownyMessaging.sendDebugMsg("onEntityExplode: Canceled " + event.getEntity().getEntityId() + " from exploding within " + coord.toString() + ".");
-						event.setCancelled(true);
-						return;
-					}
-				}
-			} catch (TownyException x) {
-				// Wilderness explosion regeneration
+				
 				if (townyWorld.isUsingTowny())
 					if (townyWorld.isExpl()) {
 						if (townyWorld.isUsingPlotManagementWildRevert() && (entity != null)) {
@@ -434,16 +449,16 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingBreak(PaintingBreakEvent event) {
+	public void onHangingBreak(HangingBreakEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
 			return;
 		}
 
-		if (event instanceof PaintingBreakByEntityEvent) {
-			PaintingBreakByEntityEvent evt = (PaintingBreakByEntityEvent) event;
-			Painting painting = evt.getPainting();
+		if (event instanceof HangingBreakByEntityEvent) {
+			HangingBreakByEntityEvent evt = (HangingBreakByEntityEvent) event;
+			Hanging painting = evt.getEntity();
 			Object remover = evt.getRemover();
 
 			try {
@@ -502,7 +517,7 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingPlace(PaintingPlaceEvent event) {
+	public void onHangingPlace(HangingPlaceEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
@@ -512,7 +527,7 @@ public class TownyEntityListener implements Listener {
 		long start = System.currentTimeMillis();
 
 		Player player = event.getPlayer();
-		Painting painting = event.getPainting();
+		Hanging painting = event.getEntity();
 
 		try {
 			TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(painting.getWorld().getName());
@@ -543,7 +558,7 @@ public class TownyEntityListener implements Listener {
 			return;
 		}
 
-		TownyMessaging.sendDebugMsg("onPaintingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
+		TownyMessaging.sendDebugMsg("onHangingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
 	}
 
 }
