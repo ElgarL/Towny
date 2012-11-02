@@ -11,10 +11,11 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
-import org.bukkit.entity.Painting;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
@@ -30,9 +31,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
-import org.bukkit.event.painting.PaintingBreakByEntityEvent;
-import org.bukkit.event.painting.PaintingBreakEvent;
-import org.bukkit.event.painting.PaintingPlaceEvent;
+import org.bukkit.event.hanging.*;
 
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyMessaging;
@@ -434,20 +433,20 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingBreak(PaintingBreakEvent event) {
+	public void onHangingBreak(HangingBreakEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
 			return;
 		}
 
-		if (event instanceof PaintingBreakByEntityEvent) {
-			PaintingBreakByEntityEvent evt = (PaintingBreakByEntityEvent) event;
-			Painting painting = evt.getPainting();
+		if (event instanceof HangingBreakByEntityEvent) {
+			HangingBreakByEntityEvent evt = (HangingBreakByEntityEvent) event;
+			Hanging hanging = evt.getEntity();
 			Object remover = evt.getRemover();
 
 			try {
-				String worldName = painting.getWorld().getName();
+				String worldName = hanging.getWorld().getName();
 				TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(worldName);
 
 				if (!townyWorld.isUsingTowny())
@@ -458,7 +457,7 @@ public class TownyEntityListener implements Listener {
 					Player player = (Player) evt.getRemover();
 
 					//Get destroy permissions (updates if none exist)
-					boolean bDestroy = PlayerCacheUtil.getCachePermission(player, painting.getLocation(), 321, (byte)0, TownyPermission.ActionType.DESTROY);
+					boolean bDestroy = PlayerCacheUtil.getCachePermission(player, hanging.getLocation(), 321, (byte)0, TownyPermission.ActionType.DESTROY);
 					
 					// Allow the removal if we are permitted
 					if (bDestroy)
@@ -477,7 +476,7 @@ public class TownyEntityListener implements Listener {
 				} else if ((remover instanceof Fireball) || (remover instanceof LightningStrike)) {
 
 					try {
-						TownBlock townBlock = new WorldCoord(worldName, Coord.parseCoord(painting.getLocation())).getTownBlock();
+						TownBlock townBlock = new WorldCoord(worldName, Coord.parseCoord(hanging.getLocation())).getTownBlock();
 
 						// Explosions are blocked in this plot
 						if ((!townBlock.getPermissions().explosion) && (!townBlock.getWorld().isForceExpl()))
@@ -502,7 +501,7 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingPlace(PaintingPlaceEvent event) {
+	public void onHangingPlace(HangingPlaceEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
@@ -512,16 +511,16 @@ public class TownyEntityListener implements Listener {
 		long start = System.currentTimeMillis();
 
 		Player player = event.getPlayer();
-		Painting painting = event.getPainting();
+		Hanging hanging = event.getEntity();
 
 		try {
-			TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(painting.getWorld().getName());
+			TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(hanging.getWorld().getName());
 
 			if (!townyWorld.isUsingTowny())
 				return;
 
 			//Get build permissions (updates if none exist)
-			boolean bBuild = PlayerCacheUtil.getCachePermission(player, painting.getLocation(), 321, (byte)0, TownyPermission.ActionType.BUILD);
+			boolean bBuild = PlayerCacheUtil.getCachePermission(player, hanging.getLocation(), 321, (byte)0, TownyPermission.ActionType.BUILD);
 			
 			// Allow placing if we are permitted
 			if (bBuild)
@@ -543,7 +542,7 @@ public class TownyEntityListener implements Listener {
 			return;
 		}
 
-		TownyMessaging.sendDebugMsg("onPaintingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
+		TownyMessaging.sendDebugMsg("onHangingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
 	}
 
 }
