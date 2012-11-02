@@ -14,7 +14,7 @@ import org.bukkit.entity.Fireball;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
-import org.bukkit.entity.Painting;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
@@ -30,9 +30,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
-import org.bukkit.event.painting.PaintingBreakByEntityEvent;
-import org.bukkit.event.painting.PaintingBreakEvent;
-import org.bukkit.event.painting.PaintingPlaceEvent;
+import org.bukkit.event.hanging.*;
 
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyMessaging;
@@ -434,16 +432,16 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingBreak(PaintingBreakEvent event) {
+	public void onHangingBreak(HangingBreakEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
 			return;
 		}
 
-		if (event instanceof PaintingBreakByEntityEvent) {
-			PaintingBreakByEntityEvent evt = (PaintingBreakByEntityEvent) event;
-			Painting painting = evt.getPainting();
+		if (event instanceof HangingBreakByEntityEvent) {
+			HangingBreakByEntityEvent evt = (HangingBreakByEntityEvent) event;
+			Hanging painting = evt.getEntity();
 			Object remover = evt.getRemover();
 
 			try {
@@ -502,7 +500,7 @@ public class TownyEntityListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPaintingPlace(PaintingPlaceEvent event) {
+	public void onHangingPlace(HangingPlaceEvent event) {
 
 		if (plugin.isError()) {
 			event.setCancelled(true);
@@ -512,7 +510,7 @@ public class TownyEntityListener implements Listener {
 		long start = System.currentTimeMillis();
 
 		Player player = event.getPlayer();
-		Painting painting = event.getPainting();
+		Hanging painting = event.getEntity();
 
 		try {
 			TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(painting.getWorld().getName());
@@ -543,7 +541,7 @@ public class TownyEntityListener implements Listener {
 			return;
 		}
 
-		TownyMessaging.sendDebugMsg("onPaintingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
+		TownyMessaging.sendDebugMsg("onHangingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
 	}
 
 }
