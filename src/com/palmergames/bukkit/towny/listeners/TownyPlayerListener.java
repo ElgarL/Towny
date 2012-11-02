@@ -22,6 +22,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -231,7 +232,6 @@ public class TownyPlayerListener implements Listener {
 			}
 			
 			if (event.getPlayer().getItemInHand() != null) {
-				
 				if (TownySettings.isItemUseId(event.getPlayer().getItemInHand().getTypeId())) {
 					event.setCancelled(onPlayerInteract(event.getPlayer(), null, event.getPlayer().getItemInHand()));
 					return;
@@ -349,7 +349,7 @@ public class TownyPlayerListener implements Listener {
 
 		TownyPerms.assignPermissions(null, event.getPlayer());
 	}
-
+	
 	public boolean onPlayerInteract(Player player, Block block, ItemStack item) {
 
 
@@ -377,7 +377,6 @@ public class TownyPlayerListener implements Listener {
 			PlayerCache cache = plugin.getCache(player);
 			//cache.updateCoord(worldCoord);
 			try {
-
 				TownBlockStatus status = cache.getStatus();
 				if (status == TownBlockStatus.UNCLAIMED_ZONE && wildOverride)
 					return cancelState;
