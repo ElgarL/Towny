@@ -20,6 +20,7 @@ import com.palmergames.util.TimeTools;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.util.List;
  * /townyadmin
  */
 
-public class TownyAdminCommand implements CommandExecutor {
+public class TownyAdminCommand implements TabExecutor {
 
 	private static Towny plugin;
 	private static final List<String> ta_help = new ArrayList<String>();
@@ -269,7 +270,6 @@ public class TownyAdminCommand implements CommandExecutor {
 
 				List<WorldCoord> selection;
 				selection = AreaSelectionUtil.selectWorldCoordArea(null, new WorldCoord(player.getWorld().getName(), Coord.parseCoord(player)), split);
-				selection = AreaSelectionUtil.filterWildernessBlocks(selection);
 
 				new TownClaim(plugin, player, null, selection, false, false, true).start();
 
@@ -674,4 +674,13 @@ public class TownyAdminCommand implements CommandExecutor {
 	 * private static int getNumBankAccounts() { try { return 0; } catch
 	 * (Exception e) { return 0; } }
 	 */
+
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command command,
+			String alias, String[] args) {
+		if (args.length == 1) {
+			
+		}
+		return null;
+	}
 }
