@@ -57,6 +57,7 @@ public class TownCommand implements CommandExecutor {
 		output.add(ChatTools.formatCommand("", "/town", "list", ""));
 		output.add(ChatTools.formatCommand("", "/town", "online", TownySettings.getLangString("town_help_10")));
 		output.add(ChatTools.formatCommand("", "/town", "leave", ""));
+		output.add(ChatTools.formatCommand("", "/town", "reslist", ""));
 		output.add(ChatTools.formatCommand("", "/town", "ranklist", ""));
 		output.add(ChatTools.formatCommand("", "/town", "spawn", TownySettings.getLangString("town_help_5")));
 		if (!TownySettings.isTownCreationAdminOnly())
@@ -246,7 +247,19 @@ public class TownCommand implements CommandExecutor {
 						throw new TownyException(TownySettings.getLangString("msg_err_dont_belong_town"));
 					}
 
-				} else if (split[0].equalsIgnoreCase("join")) {
+				} else if (split[0].equalsIgnoreCase("reslist")) {
+
+					if (!TownyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_TOWN_RESLIST.getNode()))
+						throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
+
+					try {
+						Resident resident = TownyUniverse.getDataSource().getResident(player.getName());
+						Town town = resident.getTown();
+						TownyMessaging.sendMessage(player, TownyFormatter.getFormattedResidents(town));
+					} catch (NotRegisteredException x) {
+						throw new TownyException(TownySettings.getLangString("msg_err_dont_belong_town"));
+					}
+				}  else if (split[0].equalsIgnoreCase("join")) {
 
 					if (!TownyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_TOWN_JOIN.getNode()))
 						throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
