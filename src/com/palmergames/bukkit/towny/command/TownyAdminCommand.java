@@ -530,7 +530,7 @@ public class TownyAdminCommand implements CommandExecutor {
 							}
 						}
 						TownyUniverse.getDataSource().saveTown(capital);
-						String[] msg = TownySettings.getNewKingMsg(newKing.getName(),nation.getName());
+						String[] msg = TownySettings.getNewMayorMsg(newKing.getName());
 						TownyMessaging.sendTownMessage(capital, msg);
 						// TownyMessaging.sendMessage(player, msg);
 					} catch (TownyException e) {
