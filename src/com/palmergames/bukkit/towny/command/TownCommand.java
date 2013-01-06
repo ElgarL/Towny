@@ -1256,7 +1256,7 @@ public class TownCommand implements TabExecutor {
 			// Determine conditions
 			if (isTownyAdmin) {
 				townSpawnPermission = TownSpawnLevel.ADMIN;
-			} else if (split.length == 0) {
+			} else if ((split.length == 0) && outpost) {
 				townSpawnPermission = TownSpawnLevel.TOWN_RESIDENT;
 			} else {
 				// split.length > 1

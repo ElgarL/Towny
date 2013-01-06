@@ -270,7 +270,7 @@ public class TownyAdminCommand implements TabExecutor {
 
 				List<WorldCoord> selection;
 				selection = AreaSelectionUtil.selectWorldCoordArea(null, new WorldCoord(player.getWorld().getName(), Coord.parseCoord(player)), split);
-
+				selection = AreaSelectionUtil.filterWildernessBlocks(selection);
 				new TownClaim(plugin, player, null, selection, false, false, true).start();
 
 			} catch (TownyException x) {
