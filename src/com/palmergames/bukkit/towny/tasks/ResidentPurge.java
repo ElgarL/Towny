@@ -6,7 +6,10 @@ import org.bukkit.command.CommandSender;
 
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyMessaging;
+import com.palmergames.bukkit.towny.event.TownRemoveResidentEvent;
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Resident;
+import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.util.BukkitTools;
 
@@ -41,6 +44,11 @@ public class ResidentPurge extends Thread {
 			if (!resident.isNPC() && (System.currentTimeMillis() - resident.getLastOnline() > (this.deleteTime)) && !BukkitTools.isOnline(resident.getName())) {
 				count++;
 				message("Deleting resident: " + resident.getName());
+				try{
+					Town town=resident.getTown();
+					BukkitTools.getPluginManager().callEvent(new TownRemoveResidentEvent(resident, town));
+				}
+				catch(NotRegisteredException e){ }
 				TownyUniverse.getDataSource().removeResident(resident);
 				TownyUniverse.getDataSource().removeResidentList(resident);
 			}
