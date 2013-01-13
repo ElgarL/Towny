@@ -1,6 +1,7 @@
 package com.palmergames.bukkit.towny.command;
 
 import com.palmergames.bukkit.towny.*;
+import com.palmergames.bukkit.towny.event.TownRemoveResidentEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.EmptyTownException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
@@ -547,6 +548,11 @@ public class TownyAdminCommand implements CommandExecutor {
 					try {
 						Resident resident = TownyUniverse.getDataSource().getResident(name);
 						if (!resident.isNPC() && !BukkitTools.isOnline(resident.getName())) {
+							try{
+								Town town=resident.getTown();
+								BukkitTools.getPluginManager().callEvent(new TownRemoveResidentEvent(resident, town));
+							}
+							catch(NotRegisteredException e){ }
 							TownyUniverse.getDataSource().removeResident(resident);
 							TownyUniverse.getDataSource().removeResidentList(resident);
 							TownyMessaging.sendGlobalMessage(TownySettings.getDelResidentMsg(resident));
