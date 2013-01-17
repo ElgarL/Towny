@@ -97,8 +97,7 @@ public class TownyEconomyObject extends TownyObject {
 			if (collector._collect(amount)) {
 				// Transaction failed, refund account.
 				_collect(amount);
-				return false;
-			};
+			}
 			return true;
 		} else {
 			return false;
