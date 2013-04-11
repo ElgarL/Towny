@@ -1545,6 +1545,11 @@ public class TownySettings {
 			maxPlots = getInt(ConfigNodes.TOWN_MAX_PLOTS_PER_RESIDENT);
 		return maxPlots;
 	}
+	
+	public static int getMaxResidentOutposts(Resident resident){
+		int maxOutposts = TownyUniverse.getPermissionSource().getGroupPermissionIntNode(resident.getName(),PermissionNodes.TOWNY_MAX_OUTPOSTS.getNode());
+		return maxOutposts;
+	}
 
 	public static boolean getPermFlag_Resident_Friend_Build() {
 
