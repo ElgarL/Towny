@@ -519,6 +519,7 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 				if (line != null) {
 					tokens = line.split(",");
 					for (String token : tokens) {
+						System.out.println(token);
 						if (!token.isEmpty()) {
 							Resident resident = getResident(token);
 							if (resident != null) {

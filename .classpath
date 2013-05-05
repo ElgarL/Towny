@@ -2,20 +2,22 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="../lib/bpermissions.jar"/>
-	<classpathentry kind="lib" path="../lib/Essentials.jar"/>
-	<classpathentry kind="lib" path="../lib/EssentialsGroupManager.jar"/>
-	<classpathentry kind="lib" path="../lib/iConomy.jar"/>
-	<classpathentry kind="lib" path="../lib/Permissions.jar"/>
-	<classpathentry kind="lib" path="../lib/PermissionsEx.jar"/>
-	<classpathentry kind="lib" path="../lib/Questioner.jar"/>
-	<classpathentry kind="lib" path="../lib/Register.jar"/>
-	<classpathentry kind="lib" path="../lib/bukkit.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://jd.bukkit.org/apidocs/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="../lib/citizensapi-2.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="../lib/Vault.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/bpermissions.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/citizensapi-2.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/CraftIRC.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/dynmap-api.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Essentials.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/EssentialsGroupManager.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/h2.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/HeroicDeath.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/iConomy.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Permissions.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/PermissionsBukkit.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/PermissionsEx.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Questioner.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Register.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Towny.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/Towny-Depencies/Vault.jar"/>
+	<classpathentry kind="lib" path="D:/Coding/Bukket/workspace/lib/craftbukkit-1.5.1-R0.2-20130406.060241-8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
