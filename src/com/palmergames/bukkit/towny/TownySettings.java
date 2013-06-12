@@ -18,6 +18,8 @@ import org.bukkit.Material;
 
 import com.palmergames.bukkit.config.CommentedConfiguration;
 import com.palmergames.bukkit.config.ConfigNodes;
+import com.palmergames.bukkit.towny.event.TownyNationUpkeepEvent;
+import com.palmergames.bukkit.towny.event.TownyTownUpkeepEvent;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -27,10 +29,10 @@ import com.palmergames.bukkit.towny.object.TownyObject;
 import com.palmergames.bukkit.towny.object.TownyPermission.ActionType;
 import com.palmergames.bukkit.towny.object.TownyPermission.PermLevel;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
-import com.palmergames.bukkit.towny.object.TownyUpkeepModifier;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.bukkit.towny.permissions.PermissionNodes;
 import com.palmergames.bukkit.towny.war.flagwar.TownyWarConfig;
+import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.bukkit.util.NameValidation;
 import com.palmergames.util.FileMgmt;
 import com.palmergames.util.TimeTools;
@@ -1345,8 +1347,10 @@ public class TownySettings {
 			}
 		} else
 			multiplier = 1.0;
-
-		return (getTownUpkeep() * multiplier)+TownyUpkeepModifier.getTownUpkeepModifier(town);
+		
+		TownyTownUpkeepEvent townUpkeepEvent = new TownyTownUpkeepEvent(town,getTownUpkeep()*multiplier);
+		BukkitTools.getPluginManager().callEvent(townUpkeepEvent);
+		return townUpkeepEvent.getUpkeep();
 	}
 
 	public static double getTownUpkeep() {
@@ -1378,7 +1382,9 @@ public class TownySettings {
 		else
 			multiplier = 1.0;
 
-		return (getNationUpkeep() * multiplier) + TownyUpkeepModifier.getNationUpkeepModifier(nation);
+		TownyNationUpkeepEvent nationUpkeepEvent = new TownyNationUpkeepEvent(nation,getNationUpkeep()*multiplier);
+		BukkitTools.getPluginManager().callEvent(nationUpkeepEvent);
+		return nationUpkeepEvent.getUpkeep();
 	}
 
 	public static String getFlatFileBackupType() {

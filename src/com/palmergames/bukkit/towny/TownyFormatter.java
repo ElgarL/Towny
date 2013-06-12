@@ -287,7 +287,7 @@ public class TownyFormatter {
 			if (TownyEconomyHandler.isActive()) {
 				line = Colors.Green + "Bank: " + Colors.LightGreen + nation.getHoldingFormattedBalance();
 
-				if (TownySettings.getNationUpkeepCost(nation) > 0)
+				if (nation.getCapital().hasUpkeep())
 					line += (Colors.Gray + " | " + Colors.Green + "Daily upkeep: " + Colors.Red + TownySettings.getNationUpkeepCost(nation));
 
 			}
