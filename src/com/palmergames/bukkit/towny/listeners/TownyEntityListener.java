@@ -228,6 +228,20 @@ public class TownyEntityListener implements Listener {
 
 		Block block = event.getBlock();
 		Entity entity = event.getEntity();
+		Entity passenger = entity.getPassenger();
+		
+		TownyWorld World = null;
+
+		try {
+			World = TownyUniverse.getDataSource().getWorld(block.getLocation().getWorld().getName());
+			if (!World.isUsingTowny())
+				return;
+
+		} catch (NotRegisteredException e) {
+			// World not registered with Towny.
+			e.printStackTrace();
+			return;
+		}
 
 		try {
 			TownyWorld townyWorld = TownyUniverse.getDataSource().getWorld(block.getLocation().getWorld().getName());
@@ -243,6 +257,23 @@ public class TownyEntityListener implements Listener {
 						}
 					}
 				}
+				
+				/*
+				 * Allow players in vehicles to activate pressure plates if they are permitted.
+				 */
+				if (passenger != null && passenger instanceof Player) {
+					
+					//PlayerInteractEvent newEvent = new PlayerInteractEvent((Player)passenger, Action.PHYSICAL, null, block, BlockFace.SELF);
+					//Bukkit.getServer().getPluginManager().callEvent(newEvent);
+					
+					if (TownySettings.isSwitchId(block.getTypeId())) {
+						if (!plugin.getPlayerListener().onPlayerSwitchEvent((Player)passenger, block, null, World))
+							return;
+					}
+
+				}
+				
+				//System.out.println("EntityInteractEvent triggered for " + entity.toString());
 
 				// Prevent creatures triggering stone pressure plates
 				if (TownySettings.isCreatureTriggeringPressurePlateDisabled()) {
@@ -530,7 +561,7 @@ public class TownyEntityListener implements Listener {
 			}
 
 			if (remover instanceof Player) {
-				Player player = (Player) evt.getRemover();
+				Player player = (Player) remover;
 
 				// Get destroy permissions (updates if none exist)
 				boolean bDestroy = PlayerCacheUtil.getCachePermission(player, hanging.getLocation(), 321, (byte) 0, TownyPermission.ActionType.DESTROY);

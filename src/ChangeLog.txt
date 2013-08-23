@@ -1836,3 +1836,6 @@ v0.84.0.0:
 	- Stop Item_use perms overriding Switch perms.
 	- Regen health in town only upto the maximum (allows for modded health levels).
 	- Towny will now always try to run no matter what version of CraftBukkit you are running. Instead of disabling it will output a warning message.
+v0.84.0.1:
+	- Allow players in vehicles to activate pressure plates if they are permitted.
+	- Fix possible error when a picture is removed by a projectile.
