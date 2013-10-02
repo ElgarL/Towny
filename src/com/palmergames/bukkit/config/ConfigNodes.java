@@ -1065,6 +1065,10 @@ public enum ConfigNodes {
             "war.enemy.only_attack_borders",
             "true",
             "# If true, enemy's can only attack the edge plots of a town with war flags."),
+    WAR_ENEMY_ONLY_ATTACK_OUTPOSTS(
+                    "war.enemy.only_attack_outposts",
+                    "false",
+                    "# If true, enemy's can only attack a town's outposts"),
 	WAR_ENEMY_MIN_PLAYERS_ONLINE_IN_TOWN(
 			"war.enemy.min_players_online_in_town",
 			"2",

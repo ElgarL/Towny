@@ -337,6 +337,7 @@ msg_err_enemy_war_not_part_of_nation: '&6[Krieg]&c dieser Bereich gehoert zu kei
 msg_err_enemy_war_is_neutral: '&6[Krieg]&c %s ist neutral.'
 msg_err_enemy_war_require_online: '&6[Krieg]&c Es erfordert mindestens %d aktive Spieler in %s um einen Krieg erklaeren zu koennen.'
 msg_err_enemy_war_not_on_edge_of_town: '&6[Krieg]&c Der Krieg wird nicht am Stadtrand gefuehrt.'
+msg_err_enemy_war_not_on_outpost: '&6[War]&c Only allowed to attack the outposts of a town.'
 msg_err_enemy_war_cell_already_under_attack: '&6[Krieg]&c Dieser Bereich wird bereits von %s attackiert.'
 msg_err_enemy_war_reached_max_active_flags: '&6[Krieg]&c Du kannst nicht mehr als %s Bereiche gleichzeitig angreifen.'
 

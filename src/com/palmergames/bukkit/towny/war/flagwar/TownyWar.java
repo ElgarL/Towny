@@ -210,6 +210,10 @@ public class TownyWar {
 		// Check that attack takes place on the edge of a town
 		if (TownyWarConfig.isAttackingBordersOnly() && !AreaSelectionUtil.isOnEdgeOfOwnership(landOwnerTown, worldCoord))
 			throw new TownyException(TownySettings.getLangString("msg_err_enemy_war_not_on_edge_of_town"));
+		
+		// Check that attack takes place on the outpost of a town
+		if (TownyWarConfig.isAttackingOutpostsOnly() && !townBlock.isOutpost())
+			throw new TownyException(TownySettings.getLangString("msg_err_enemy_war_not_on_outpost"));
 
 		// Check that the user can pay for the warflag + fines from losing/winning.
 		double costToPlaceWarFlag = TownyWarConfig.getCostToPlaceWarFlag();
