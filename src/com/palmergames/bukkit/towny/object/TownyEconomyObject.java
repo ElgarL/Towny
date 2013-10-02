@@ -48,7 +48,7 @@ public class TownyEconomyObject extends TownyObject {
 		if (canPayFromHoldings(amount)) {
 			if (TownyEconomyHandler.isActive())
 				if(amount > 0)return TownyEconomyHandler.subtract(getEconomyName(), amount, getBukkitWorld());
-				else return TownyEconomyHandler.add(getEconomyName(), amount, getBukkitWorld());
+				else return TownyEconomyHandler.add(getEconomyName(), -amount, getBukkitWorld());
 		}
 		return false;
 	}
