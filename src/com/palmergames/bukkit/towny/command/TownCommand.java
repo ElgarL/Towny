@@ -1249,12 +1249,14 @@ public class TownCommand implements CommandExecutor {
 			TownyMessaging.sendDebugMsg(townSpawnPermission.toString() + " " + townSpawnPermission.isAllowed());
 			townSpawnPermission.checkIfAllowed(plugin, player);
 
-                        
-      // Check the permissions
-      if(!(isTownyAdmin ||
-              ((townSpawnPermission == TownSpawnLevel.UNAFFILIATED) ? town.isPublic() : townSpawnPermission.hasPermissionNode(plugin, player)))) {
-        throw new TownyException(TownySettings.getLangString("msg_err_not_public"));
-      }
+
+			// Check the permissions
+			if(!(isTownyAdmin ||
+				((townSpawnPermission == TownSpawnLevel.UNAFFILIATED) ?
+				town.isPublic() :
+				townSpawnPermission.hasPermissionNode(plugin, player)))) {
+				throw new TownyException(TownySettings.getLangString("msg_err_not_public"));
+			}
 
 			if (!isTownyAdmin) {
 				// Prevent spawn travel while in disallowed zones (if
@@ -1867,9 +1869,9 @@ public class TownCommand implements CommandExecutor {
 						throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
 					
 					int maxOutposts = TownySettings.getMaxResidentOutposts(resident); 
-		            if (!TownyUniverse.getPermissionSource().isTownyAdmin(player) && maxOutposts != -1 &&(maxOutposts <= resident.getTown().getAllOutpostSpawns().size())) 
-		            	throw new TownyException(String.format(TownySettings.getLangString("msg_max_outposts_own"), maxOutposts));
-		            
+					if (!TownyUniverse.getPermissionSource().isTownyAdmin(player) && maxOutposts != -1 &&(maxOutposts <= resident.getTown().getAllOutpostSpawns().size())) 
+						throw new TownyException(String.format(TownySettings.getLangString("msg_max_outposts_own"), maxOutposts));
+					
 					if (TownySettings.isAllowingOutposts()) {
 
 						if (world.hasTownBlock(key))
