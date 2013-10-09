@@ -1839,3 +1839,17 @@ v0.84.0.0:
 v0.84.0.1:
 	- Allow players in vehicles to activate pressure plates if they are permitted.
 	- Fix possible error when a picture is removed by a projectile.
+v0.84.0.2:
+	- Allow negative upkeep on nations.
+v0.84.0.3:
+	- Change health regen to implement Bukkits new method for health measurement.
+v0.84.0.4:
+	- Zero Economy accounts when renaming/deleting Towns/Nation as Vault doesn't support deleting them.
+v0.84.0.5:
+	- Minor performace changes to plot regen code.
+	- Add TownyPermissionSource implementation that uses Vault Chat API (ZerothAngel).
+v0.84.0.6:
+	- Fix permission check to use nation.kick command.
+	- Grammar fix in english.yml
+v0.84.0.7:
+	- Incremental price change for bonus plots (by Slind).
