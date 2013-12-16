@@ -1970,7 +1970,7 @@ public class TownCommand implements CommandExecutor {
 		for (int i = 0; i < 4; i++)
 			try {
 				TownBlock edgeTownBlock = worldCoord.getTownyWorld().getTownBlock(new Coord(worldCoord.getX() + offset[i][0], worldCoord.getZ() + offset[i][1]));
-				if (edgeTownBlock.isOwner(owner)) {
+				if (edgeTownBlock.isOwner(owner) && !edgeTownBlock.isOutpost()) {
 					if (TownySettings.getDebug())
 						System.out.println("true");
 					return true;

@@ -336,6 +336,7 @@ msg_err_enemy_war_not_part_of_nation: '&6[War]&c This area doesn''t belong to a 
 msg_err_enemy_war_is_neutral: '&6[War]&c %s is neutral.'
 msg_err_enemy_war_require_online: '&6[War]&c Require at least %d people online in %s to attack.'
 msg_err_enemy_war_not_on_edge_of_town: '&6[War]&c Only allowed to attack the borders of a town.'
+msg_err_enemy_war_not_on_outpost: '&6[War]&c Only allowed to attack the outposts of a town.'
 msg_err_enemy_war_cell_already_under_attack: '&6[War]&c This area is already under attack by %s.'
 msg_err_enemy_war_reached_max_active_flags: '&6[War]&c You can''t attack more than %d areas at once.'
 
