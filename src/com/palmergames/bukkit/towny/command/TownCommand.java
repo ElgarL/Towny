@@ -997,15 +997,18 @@ public class TownCommand implements CommandExecutor {
 			return n;
 		double cost = town.getBonusBlockCostN(n);
 		try {			
-			if (TownySettings.isUsingEconomy() && !town.pay(cost, String.format("Town Buy Bonus (%d)", n)))
+			boolean pay = town.pay(cost, String.format("Town Buy Bonus (%d)", n));
+			if (TownySettings.isUsingEconomy() && !pay) {
 				throw new TownyException(String.format(TownySettings.getLangString("msg_no_funds_to_buy"), n, "bonus town blocks", TownyEconomyHandler.getFormattedBalance(cost)));
-
+			} else if (TownySettings.isUsingEconomy() && pay) {
+				town.addPurchasedBlocks(n);
+				TownyMessaging.sendMsg(player, String.format(TownySettings.getLangString("msg_buy"), n, "bonus town blocks", TownyEconomyHandler.getFormattedBalance(cost)));
+			}
+			
 		} catch (EconomyException e1) {
 			throw new TownyException("Economy Error");
 		}
 
-		town.addPurchasedBlocks(n);
-		TownyMessaging.sendMsg(player, String.format(TownySettings.getLangString("msg_buy"), n, "bonus town blocks", TownyEconomyHandler.getFormattedBalance(cost)));
 		return n;
 	}
 
