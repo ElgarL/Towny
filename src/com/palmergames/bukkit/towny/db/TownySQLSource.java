@@ -11,11 +11,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Queue;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -45,6 +48,8 @@ import java.sql.ResultSet;
 
 public class TownySQLSource extends TownyFlatFileSource {
 
+	private Queue<Query> queryQueue = new ConcurrentLinkedQueue<Query>();
+	
 	protected String driver = "";
 	protected String dsn = "";
 	protected String hostname = "";
@@ -320,6 +325,18 @@ public class TownySQLSource extends TownyFlatFileSource {
 		}
 
 		TownyMessaging.sendDebugMsg("Checking done!");
+		
+		Bukkit.getScheduler().runTaskTimerAsynchronously(Towny.getInstance(), new Runnable() {
+			public void run() {
+				while (!TownySQLSource.this.queryQueue.isEmpty()) {
+					TownySQLSource.Query query = TownySQLSource.this.queryQueue.poll();
+					if (query.update)
+						TownySQLSource.this.UpdateDB(query.tb_name, query.args, query.keys);
+					else
+						TownySQLSource.this.DeleteDB(query.tb_name, query.args);
+				}
+			}
+		}, 5L, 5L);
 	}
 
 	/**
@@ -366,7 +383,13 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the update was successfull.
 	 */
 	public boolean UpdateDB(String tb_name, HashMap<String, Object> args, List<String> keys) {
-
+		
+		// Make sure we only execute queries in async
+		if (Bukkit.isPrimaryThread()) {
+			this.queryQueue.add(new Query(tb_name, args, keys));
+			return true;
+		}
+		
 		if (!getContext())
 			return false;
 		String code;
@@ -457,6 +480,12 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the delete was a success.
 	 */
 	public boolean DeleteDB(String tb_name, HashMap<String, Object> args) {
+		
+		// Make sure we only execute queries in async
+		if (Bukkit.isPrimaryThread()) {
+			this.queryQueue.add(new Query(tb_name, args));
+			return true;
+		}
 
 		if (!getContext())
 			return false;
@@ -1616,6 +1645,28 @@ public class TownySQLSource extends TownyFlatFileSource {
 	public boolean saveWorldList() {
 
 		return true;
+	}
+	
+	private class Query {
+		public final boolean update;
+		public final String tb_name;
+		public final HashMap<String, Object> args;
+		public final List<String> keys;
+		
+		public Query(String tb_name, HashMap<String, Object> args) {
+			this(false, tb_name, args, null);
+		}
+		
+		public Query(String tb_name, HashMap<String, Object> args, List<String> keys) {
+			this(true, tb_name, args, keys);
+		}
+		
+		private Query(boolean update, String tb_name, HashMap<String, Object> args, List<String> keys) {
+			this.update = update;
+			this.tb_name = tb_name;
+			this.args = args;
+			this.keys = keys;
+		}
 	}
 
 }
