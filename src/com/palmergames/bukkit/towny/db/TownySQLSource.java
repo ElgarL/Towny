@@ -168,7 +168,6 @@ public class TownySQLSource extends TownyFlatFileSource {
 				+ "`public` bool NOT NULL DEFAULT '0'," 
 				+ "`admindisabledpvp` bool NOT NULL DEFAULT '0'," 
 				+ "`homeblock` mediumtext NOT NULL,"
-				+ "`townBlocks` mediumtext NOT NULL," 
 				+ "`spawn` mediumtext NOT NULL," 
 				+ "`outpostSpawns` mediumtext DEFAULT NULL," 
 				+ "PRIMARY KEY (`name`)" 
@@ -271,8 +270,12 @@ public class TownySQLSource extends TownyFlatFileSource {
 				+ "`z` mediumint NOT NULL," 
 				+ "`permissions` mediumtext NOT NULL," 
 				+ "`locked` bool NOT NULL DEFAULT '0',"
-				+ "`changed` bool NOT NULL DEFAULT '0'," 
-				+ "PRIMARY KEY (`world`,`x`,`z`)" 
+				+ "`changed` bool NOT NULL DEFAULT '0',"
+				+ "`type` TINYINT NOT  NULL DEFAULT '0',"
+				+ "`isOutpost` bool NOT NULL DEFAULT '0',"
+				+ "`plotPrice` DOUBLE NOT NULL DEFAULT '0.0',"
+				+ "`town` VARCHAR(32) NOT NULL,"
+				+ "PRIMARY KEY (`world`,`x`,`z`)"
 				+ ")";
 		try {
 			Statement s = cntx.createStatement();
@@ -797,9 +800,8 @@ public class TownySQLSource extends TownyFlatFileSource {
 				town.setAdminDisabledPVP(rs.getBoolean("admindisabledpvp"));
 
 				town.setPurchasedBlocks(rs.getInt("purchased"));
-				line = rs.getString("townBlocks");
-				if (line != null)
-					utilLoadTownBlocks(line, town, null);
+				
+				loadTownBlocks(town);
 
 				line = rs.getString("homeBlock");
 				if (line != null) {
@@ -885,6 +887,52 @@ public class TownySQLSource extends TownyFlatFileSource {
 		} catch (Exception e) {
 			TownyMessaging.sendErrorMsg("SQL: Load Town unknown Error - ");
 			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	private boolean loadTownBlocks(Town town) {
+		if (!getContext())
+			return false;
+
+		Statement s = null;
+		try {
+			s = cntx.createStatement();
+			ResultSet rs = s.executeQuery("SELECT * FROM " + tb_prefix + "TOWNBLOCKS " + " WHERE town='" + town.getName() + "'");
+			
+			while (rs.next()) {
+				TownyWorld world = getWorld(rs.getString("world"));
+				
+				int x = rs.getInt("x");
+				int z = rs.getInt("z");
+				
+				try {
+					world.newTownBlock(x, z);
+				} catch (AlreadyRegisteredException e) {
+				}
+				TownBlock townBlock = world.getTownBlock(x, z);
+				
+				if (town != null)
+					townBlock.setTown(town);
+				
+				townBlock.setPermissions(rs.getString("permissions"));
+				townBlock.setLocked(rs.getBoolean("locked"));
+				townBlock.setType(rs.getInt("type"));
+				townBlock.setOutpost(rs.getBoolean("isOutpost"));
+				townBlock.setPlotPrice(rs.getDouble("plotPrice"));
+			}
+			return true;
+		} catch (SQLException e) {
+			TownyMessaging.sendErrorMsg("SQL: Load TownBlock sql Error - " + e.getMessage());
+		} catch (Exception e) {
+			TownyMessaging.sendErrorMsg("SQL: Load TownBlock unknown Error - ");
+			e.printStackTrace();
+		} finally {
+			try {
+				if (s != null)
+					s.close();
+			} catch (SQLException e) {
+			}
 		}
 		return false;
 	}
@@ -1375,7 +1423,6 @@ public class TownySQLSource extends TownyFlatFileSource {
 			twn_hm.put("public", town.isPublic());
 			twn_hm.put("admindisabledpvp", town.isAdminDisabledPVP());
 			
-			twn_hm.put("townBlocks", utilSaveTownBlocks(new ArrayList<TownBlock>(town.getTownBlocks())));
 			twn_hm.put("homeblock", town.hasHomeBlock() ? town.getHomeBlock().getWorld().getName() + "," + Integer.toString(town.getHomeBlock().getX()) + "," + Integer.toString(town.getHomeBlock().getZ()) : "");
 			twn_hm.put("spawn", town.hasSpawn() ? town.getSpawn().getWorld().getName() + "," + Double.toString(town.getSpawn().getX()) + "," + Double.toString(town.getSpawn().getY()) + "," + Double.toString(town.getSpawn().getZ()) + "," + Float.toString(town.getSpawn().getPitch()) + "," + Float.toString(town.getSpawn().getYaw()) : "");
 			// Outpost Spawns
@@ -1541,6 +1588,10 @@ public class TownySQLSource extends TownyFlatFileSource {
 			tb_hm.put("permissions", townBlock.getPermissions().toString());
 			tb_hm.put("locked", townBlock.isLocked());
 			tb_hm.put("changed", townBlock.isChanged());
+			tb_hm.put("type", townBlock.getType().getId());
+			tb_hm.put("isOutpost", townBlock.isOutpost());
+			tb_hm.put("plotPrice", townBlock.getPlotPrice());
+			tb_hm.put("town", townBlock.getTown().getName());
 			UpdateDB("TOWNBLOCKS", tb_hm, Arrays.asList("world", "x", "z"));
 		} catch (Exception e) {
 			TownyMessaging.sendErrorMsg("SQL: Save TownBlock unknown error");
