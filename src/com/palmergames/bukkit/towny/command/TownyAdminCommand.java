@@ -398,10 +398,13 @@ public class TownyAdminCommand implements CommandExecutor {
 
 		if (split.length == 0) {
 			sender.sendMessage(ChatTools.formatTitle("/townyadmin set"));
-			// TODO: player.sendMessage(ChatTools.formatCommand("",
-			// "/townyadmin set", "king [nation] [king]", ""));
+			// setting mayor
 			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "mayor [town] " + TownySettings.getLangString("town_help_2"), ""));
 			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "mayor [town] npc", ""));
+			// setting king
+			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "king [nation] " + TownySettings.getLangString("town_help_2"), ""));
+			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "king [nation] npc", ""));
+			// TODO:
 			// player.sendMessage(ChatTools.formatCommand("", "/townyadmin set",
 			// "debugmode [on/off]", ""));
 			// player.sendMessage(ChatTools.formatCommand("", "/townyadmin set",
@@ -412,7 +415,8 @@ public class TownyAdminCommand implements CommandExecutor {
 
 		if (!TownyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_TOWNYADMIN_SET.getNode(split[0].toLowerCase())))
 			throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
-
+		
+		//check for mayor command first
 		if (split[0].equalsIgnoreCase("mayor")) {
 			if (split.length < 3) {
 				sender.sendMessage(ChatTools.formatTitle("/townyadmin set mayor"));
@@ -473,10 +477,77 @@ public class TownyAdminCommand implements CommandExecutor {
 				} catch (TownyException e) {
 					TownyMessaging.sendErrorMsg(getSender(), e.getMessage());
 				}
-		} else {
-			TownyMessaging.sendErrorMsg(getSender(), String.format(TownySettings.getLangString("msg_err_invalid_property"), "administrative"));
-			return;
-		}
+		} 
+		// Not exactly pretty, but... should work
+		else {
+			if (split[0].equalsIgnoreCase("king")) {
+				if (split.length < 3) {
+					sender.sendMessage(ChatTools.formatTitle("/townyadmin set king"));
+					sender.sendMessage(ChatTools.formatCommand("Eg", "/townyadmin set king", "[nation] " + TownySettings.getLangString("nation_help_2"), ""));
+					sender.sendMessage(ChatTools.formatCommand("Eg", "/townyadmin set king", "[nation] npc", ""));
+				} else
+					try {
+						Resident newKing = null;
+						Nation nation = TownyUniverse.getDataSource().getNation(split[1]);
+						Town capital = nation.getCapital();
+	
+						if (split[2].equalsIgnoreCase("npc")) {
+							String name = nextNpcName();
+							TownyUniverse.getDataSource().newResident(name);
+	
+							newKing = TownyUniverse.getDataSource().getResident(name);
+	
+							newKing.setRegistered(System.currentTimeMillis());
+							newKing.setLastOnline(0);
+							newKing.setNPC(true);
+	
+							TownyUniverse.getDataSource().saveResident(newKing);
+							TownyUniverse.getDataSource().saveResidentList();
+	
+							// set for no upkeep as an NPC mayor is assigned
+							// TODO: nation setHasUpkeep() ?
+							// currently just doing away w/ capital's upkeep
+							capital.setHasUpkeep(false);
+	
+						} else {
+							newKing = TownyUniverse.getDataSource().getResident(split[2]);
+	
+							// set upkeep again
+							capital.setHasUpkeep(true);
+						}
+	
+						if (!capital.hasResident(newKing))
+							TownCommand.townAddResident(capital, newKing);
+						// Delete the resident if the old mayor was an NPC.
+						Resident oldKing = capital.getMayor();
+	
+						capital.setMayor(newKing);
+	
+						if (oldKing.isNPC()) {
+							try {
+								capital.removeResident(oldKing);
+								TownyUniverse.getDataSource().removeResident(oldKing);
+	
+								TownyUniverse.getDataSource().removeResidentList(oldKing);
+	
+							} catch (EmptyTownException e) {
+								// Should never reach here as we are setting a new
+								// mayor before removing the old one.
+								e.printStackTrace();
+							}
+						}
+						TownyUniverse.getDataSource().saveTown(capital);
+						String[] msg = TownySettings.getNewKingMsg(newKing.getName(),nation.getName());
+						TownyMessaging.sendTownMessage(capital, msg);
+						// TownyMessaging.sendMessage(player, msg);
+					} catch (TownyException e) {
+						TownyMessaging.sendErrorMsg(getSender(), e.getMessage());
+					}
+			}else {
+				TownyMessaging.sendErrorMsg(getSender(), String.format(TownySettings.getLangString("msg_err_invalid_property"), "administrative"));
+				return;
+			}
+		} 
 	}
 
 	public String nextNpcName() throws TownyException {
