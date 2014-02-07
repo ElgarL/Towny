@@ -97,6 +97,9 @@ public abstract class TownyDataSource {
 
 		return saveWorldList() && saveNationList() && saveTownList() && saveResidentList() && saveWorlds() && saveNations() && saveTowns() && saveResidents() && saveAllTownBlocks() && saveRegenList() && saveSnapshotList();
 	}
+	
+	public boolean shutdown() {
+	}
 
 	public boolean saveAllWorlds() {
 

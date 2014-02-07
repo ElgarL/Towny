@@ -341,6 +341,31 @@ public class TownySQLSource extends TownyFlatFileSource {
 			}
 		}, 5L, 5L);
 	}
+	
+	/**
+	 * Force run all pending queries
+	 */
+	@Override
+	public boolean shutdown() {
+		boolean result = true;
+		// Clean out pending queries
+		while (!TownySQLSource.this.queryQueue.isEmpty()) {
+			TownySQLSource.Query query = TownySQLSource.this.queryQueue.poll();
+			if (query.update)
+				result &= TownySQLSource.this.UpdateDB(query.tb_name, query.args, query.keys, true);
+			else
+				result &= TownySQLSource.this.DeleteDB(query.tb_name, query.args, true);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Save all then run all pending queries
+	 */
+	public boolean saveAll() {
+		return super.saveAll() && shutdown();
+	}
 
 	/**
 	 * open a connection to the SQL server.
@@ -386,9 +411,13 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the update was successfull.
 	 */
 	public boolean UpdateDB(String tb_name, HashMap<String, Object> args, List<String> keys) {
+		return UpdateDB(tb_name, args, keys, false);
+	}
+		
+	public boolean UpdateDB(String tb_name, HashMap<String, Object> args, List<String> keys, boolean force) {
 		
 		// Make sure we only execute queries in async
-		if (Bukkit.isPrimaryThread()) {
+		if (force || Bukkit.isPrimaryThread()) {
 			this.queryQueue.add(new Query(tb_name, args, keys));
 			return true;
 		}
@@ -483,6 +512,10 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the delete was a success.
 	 */
 	public boolean DeleteDB(String tb_name, HashMap<String, Object> args) {
+		return DeleteDB(tb_name, args, false);
+	}
+	
+	public boolean DeleteDB(String tb_name, HashMap<String, Object> args, boolean force) {
 		
 		// Make sure we only execute queries in async
 		if (Bukkit.isPrimaryThread()) {

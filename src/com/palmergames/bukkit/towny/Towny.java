@@ -170,8 +170,10 @@ public class Towny extends JavaPlugin {
 		
 		instance = null;
 
-		if (TownyUniverse.getDataSource() != null && error == false)
+		if (TownyUniverse.getDataSource() != null && error == false) {
 			TownyUniverse.getDataSource().saveQueues();
+			TownyUniverse.getDataSource().shutdown();
+		}
 
 		if (error == false)
 			TownyWar.onDisable();
