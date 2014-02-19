@@ -1542,7 +1542,11 @@ public class TownySettings {
 
 		return getInt(ConfigNodes.TOWN_MIN_DISTANCE_FROM_TOWN_HOMEBLOCK);
 	}
-
+	
+	public static int getMinDistanceFromTownPlotblocks() {
+		return getInt(ConfigNodes.TOWN_MIN_PLOT_DISTANCE_FROM_TOWN_PLOT);
+	}
+	
 	public static int getMaxDistanceBetweenHomeblocks() {
 
 		return getInt(ConfigNodes.TOWN_MAX_DISTANCE_BETWEEN_HOMEBLOCKS);
