@@ -98,8 +98,12 @@ public class TownyEconomyObject extends TownyObject {
 	private boolean _payTo(double amount, TownyEconomyObject collector) throws EconomyException {
 
 		if (_pay(amount)) {
-			collector._collect(amount);
-			return true;
+			if (!collector._collect(amount)) {
+				_collect(amount); //Transaction failed. Refunding amount.
+				return false;
+			} else {
+				return true;
+			}
 		} else {
 			return false;
 		}
