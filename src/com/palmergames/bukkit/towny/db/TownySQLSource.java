@@ -11,11 +11,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Queue;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -45,6 +48,8 @@ import java.sql.ResultSet;
 
 public class TownySQLSource extends TownyFlatFileSource {
 
+	private Queue<Query> queryQueue = new ConcurrentLinkedQueue<Query>();
+	
 	protected String driver = "";
 	protected String dsn = "";
 	protected String hostname = "";
@@ -163,7 +168,6 @@ public class TownySQLSource extends TownyFlatFileSource {
 				+ "`public` bool NOT NULL DEFAULT '0'," 
 				+ "`admindisabledpvp` bool NOT NULL DEFAULT '0'," 
 				+ "`homeblock` mediumtext NOT NULL,"
-				+ "`townBlocks` mediumtext NOT NULL," 
 				+ "`spawn` mediumtext NOT NULL," 
 				+ "`outpostSpawns` mediumtext DEFAULT NULL," 
 				+ "PRIMARY KEY (`name`)" 
@@ -262,12 +266,16 @@ public class TownySQLSource extends TownyFlatFileSource {
 
 		String townblock_create = "CREATE TABLE IF NOT EXISTS " + tb_prefix + "TOWNBLOCKS ("
 				+ "`world` VARCHAR(32) NOT NULL," 
-				+ "`x` bigint(20) NOT NULL," 
-				+ "`z` bigint(20) NOT NULL," 
+				+ "`x` mediumint NOT NULL," 
+				+ "`z` mediumint NOT NULL," 
 				+ "`permissions` mediumtext NOT NULL," 
 				+ "`locked` bool NOT NULL DEFAULT '0',"
-				+ "`changed` bool NOT NULL DEFAULT '0'," 
-				+ "PRIMARY KEY (`world`,`x`,`z`)" 
+				+ "`changed` bool NOT NULL DEFAULT '0',"
+				+ "`type` TINYINT NOT  NULL DEFAULT '0',"
+				+ "`isOutpost` bool NOT NULL DEFAULT '0',"
+				+ "`plotPrice` DOUBLE NOT NULL DEFAULT '0.0',"
+				+ "`town` VARCHAR(32) NOT NULL,"
+				+ "PRIMARY KEY (`world`,`x`,`z`)"
 				+ ")";
 		try {
 			Statement s = cntx.createStatement();
@@ -320,6 +328,43 @@ public class TownySQLSource extends TownyFlatFileSource {
 		}
 
 		TownyMessaging.sendDebugMsg("Checking done!");
+		
+		Bukkit.getScheduler().runTaskTimerAsynchronously(Towny.getInstance(), new Runnable() {
+			public void run() {
+				while (!TownySQLSource.this.queryQueue.isEmpty()) {
+					TownySQLSource.Query query = TownySQLSource.this.queryQueue.poll();
+					if (query.update)
+						TownySQLSource.this.UpdateDB(query.tb_name, query.args, query.keys);
+					else
+						TownySQLSource.this.DeleteDB(query.tb_name, query.args);
+				}
+			}
+		}, 5L, 5L);
+	}
+	
+	/**
+	 * Force run all pending queries
+	 */
+	@Override
+	public boolean shutdown() {
+		boolean result = true;
+		// Clean out pending queries
+		while (!TownySQLSource.this.queryQueue.isEmpty()) {
+			TownySQLSource.Query query = TownySQLSource.this.queryQueue.poll();
+			if (query.update)
+				result &= TownySQLSource.this.UpdateDB(query.tb_name, query.args, query.keys, true);
+			else
+				result &= TownySQLSource.this.DeleteDB(query.tb_name, query.args, true);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Save all then run all pending queries
+	 */
+	public boolean saveAll() {
+		return super.saveAll() && shutdown();
 	}
 
 	/**
@@ -366,7 +411,17 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the update was successfull.
 	 */
 	public boolean UpdateDB(String tb_name, HashMap<String, Object> args, List<String> keys) {
-
+		return UpdateDB(tb_name, args, keys, false);
+	}
+		
+	public boolean UpdateDB(String tb_name, HashMap<String, Object> args, List<String> keys, boolean force) {
+		
+		// Make sure we only execute queries in async
+		if (force || Bukkit.isPrimaryThread()) {
+			this.queryQueue.add(new Query(tb_name, args, keys));
+			return true;
+		}
+		
 		if (!getContext())
 			return false;
 		String code;
@@ -457,6 +512,16 @@ public class TownySQLSource extends TownyFlatFileSource {
 	 * @return true if the delete was a success.
 	 */
 	public boolean DeleteDB(String tb_name, HashMap<String, Object> args) {
+		return DeleteDB(tb_name, args, false);
+	}
+	
+	public boolean DeleteDB(String tb_name, HashMap<String, Object> args, boolean force) {
+		
+		// Make sure we only execute queries in async
+		if (Bukkit.isPrimaryThread()) {
+			this.queryQueue.add(new Query(tb_name, args));
+			return true;
+		}
 
 		if (!getContext())
 			return false;
@@ -768,9 +833,8 @@ public class TownySQLSource extends TownyFlatFileSource {
 				town.setAdminDisabledPVP(rs.getBoolean("admindisabledpvp"));
 
 				town.setPurchasedBlocks(rs.getInt("purchased"));
-				line = rs.getString("townBlocks");
-				if (line != null)
-					utilLoadTownBlocks(line, town, null);
+				
+				loadTownBlocks(town);
 
 				line = rs.getString("homeBlock");
 				if (line != null) {
@@ -856,6 +920,53 @@ public class TownySQLSource extends TownyFlatFileSource {
 		} catch (Exception e) {
 			TownyMessaging.sendErrorMsg("SQL: Load Town unknown Error - ");
 			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	private boolean loadTownBlocks(Town town) {
+		if (!getContext())
+			return false;
+
+		Statement s = null;
+		try {
+			s = cntx.createStatement();
+			ResultSet rs = s.executeQuery("SELECT * FROM " + tb_prefix + "TOWNBLOCKS " + " WHERE town='" + town.getName() + "'");
+			
+			while (rs.next()) {
+				TownyWorld world = getWorld(rs.getString("world"));
+				
+				int x = rs.getInt("x");
+				int z = rs.getInt("z");
+				
+				try {
+					world.newTownBlock(x, z);
+				} catch (AlreadyRegisteredException e) {
+				}
+				TownBlock townBlock = world.getTownBlock(x, z);
+				
+				if (town != null)
+					townBlock.setTown(town);
+				
+				townBlock.setPermissions(rs.getString("permissions"));
+				townBlock.setLocked(rs.getBoolean("locked"));
+				townBlock.setChanged(rs.getBoolean("changed"));
+				townBlock.setType(rs.getInt("type"));
+				townBlock.setOutpost(rs.getBoolean("isOutpost"));
+				townBlock.setPlotPrice(rs.getDouble("plotPrice"));
+			}
+			return true;
+		} catch (SQLException e) {
+			TownyMessaging.sendErrorMsg("SQL: Load TownBlock sql Error - " + e.getMessage());
+		} catch (Exception e) {
+			TownyMessaging.sendErrorMsg("SQL: Load TownBlock unknown Error - ");
+			e.printStackTrace();
+		} finally {
+			try {
+				if (s != null)
+					s.close();
+			} catch (SQLException e) {
+			}
 		}
 		return false;
 	}
@@ -1346,7 +1457,6 @@ public class TownySQLSource extends TownyFlatFileSource {
 			twn_hm.put("public", town.isPublic());
 			twn_hm.put("admindisabledpvp", town.isAdminDisabledPVP());
 			
-			twn_hm.put("townBlocks", utilSaveTownBlocks(new ArrayList<TownBlock>(town.getTownBlocks())));
 			twn_hm.put("homeblock", town.hasHomeBlock() ? town.getHomeBlock().getWorld().getName() + "," + Integer.toString(town.getHomeBlock().getX()) + "," + Integer.toString(town.getHomeBlock().getZ()) : "");
 			twn_hm.put("spawn", town.hasSpawn() ? town.getSpawn().getWorld().getName() + "," + Double.toString(town.getSpawn().getX()) + "," + Double.toString(town.getSpawn().getY()) + "," + Double.toString(town.getSpawn().getZ()) + "," + Float.toString(town.getSpawn().getPitch()) + "," + Float.toString(town.getSpawn().getYaw()) : "");
 			// Outpost Spawns
@@ -1512,6 +1622,10 @@ public class TownySQLSource extends TownyFlatFileSource {
 			tb_hm.put("permissions", townBlock.getPermissions().toString());
 			tb_hm.put("locked", townBlock.isLocked());
 			tb_hm.put("changed", townBlock.isChanged());
+			tb_hm.put("type", townBlock.getType().getId());
+			tb_hm.put("isOutpost", townBlock.isOutpost());
+			tb_hm.put("plotPrice", townBlock.getPlotPrice());
+			tb_hm.put("town", townBlock.getTown().getName());
 			UpdateDB("TOWNBLOCKS", tb_hm, Arrays.asList("world", "x", "z"));
 		} catch (Exception e) {
 			TownyMessaging.sendErrorMsg("SQL: Save TownBlock unknown error");
@@ -1616,6 +1730,28 @@ public class TownySQLSource extends TownyFlatFileSource {
 	public boolean saveWorldList() {
 
 		return true;
+	}
+	
+	private class Query {
+		public final boolean update;
+		public final String tb_name;
+		public final HashMap<String, Object> args;
+		public final List<String> keys;
+		
+		public Query(String tb_name, HashMap<String, Object> args) {
+			this(false, tb_name, args, null);
+		}
+		
+		public Query(String tb_name, HashMap<String, Object> args, List<String> keys) {
+			this(true, tb_name, args, keys);
+		}
+		
+		private Query(boolean update, String tb_name, HashMap<String, Object> args, List<String> keys) {
+			this.update = update;
+			this.tb_name = tb_name;
+			this.args = args;
+			this.keys = keys;
+		}
 	}
 
 }

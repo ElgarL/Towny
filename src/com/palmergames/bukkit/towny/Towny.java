@@ -44,6 +44,12 @@ import java.util.regex.Pattern;
  */
 
 public class Towny extends JavaPlugin {
+	
+	private static Towny instance;
+	
+	public static Towny getInstance() {
+		return instance;
+	}
 
 	private String version = "2.0.0";
 
@@ -75,6 +81,8 @@ public class Towny extends JavaPlugin {
 	public void onEnable() {
 
 		System.out.println("====================      Towny      ========================");
+		
+		instance = this;
 
 		version = this.getDescription().getVersion();
 
@@ -159,9 +167,13 @@ public class Towny extends JavaPlugin {
 	public void onDisable() {
 
 		System.out.println("==============================================================");
+		
+		instance = null;
 
-		if (TownyUniverse.getDataSource() != null && error == false)
+		if (TownyUniverse.getDataSource() != null && error == false) {
 			TownyUniverse.getDataSource().saveQueues();
+			TownyUniverse.getDataSource().shutdown();
+		}
 
 		if (error == false)
 			TownyWar.onDisable();
