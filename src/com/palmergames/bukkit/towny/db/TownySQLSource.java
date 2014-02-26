@@ -950,6 +950,7 @@ public class TownySQLSource extends TownyFlatFileSource {
 				
 				townBlock.setPermissions(rs.getString("permissions"));
 				townBlock.setLocked(rs.getBoolean("locked"));
+				townBlock.setChanged(rs.getBoolean("changed"));
 				townBlock.setType(rs.getInt("type"));
 				townBlock.setOutpost(rs.getBoolean("isOutpost"));
 				townBlock.setPlotPrice(rs.getDouble("plotPrice"));
