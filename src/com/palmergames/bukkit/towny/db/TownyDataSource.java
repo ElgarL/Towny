@@ -99,6 +99,8 @@ public abstract class TownyDataSource {
 	}
 	
 	public boolean shutdown() {
+		
+		return true;
 	}
 
 	public boolean saveAllWorlds() {
