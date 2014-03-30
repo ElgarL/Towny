@@ -48,6 +48,14 @@ public class TownyFormatter {
 		List<Resident> onlineResidents = TownyUniverse.getOnlineResidentsViewable(player, residentList);
 		return getFormattedResidents(prefix, onlineResidents);
 	}
+	
+	public static List<String> getFormattedResidents(Town town) {
+		List<String> out = new ArrayList<String>();
+		TownyWorld world = town.getWorld();
+		String[] residents = getFormattedNames(town.getResidents().toArray(new Resident[0]));
+		out.addAll(ChatTools.listArr(residents, Colors.Green + "Residents " + Colors.LightGreen + "[" + town.getNumResidents() + "]" + Colors.Green + ":" + Colors.White + " "));
+		return out;
+	}
 
 	public static List<String> getFormattedResidents(String prefix, List<Resident> residentList) {
 
