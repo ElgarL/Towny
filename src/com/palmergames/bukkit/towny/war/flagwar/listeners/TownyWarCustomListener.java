@@ -166,7 +166,7 @@ public class TownyWarCustomListener implements Listener {
 					x.printStackTrace();
 				}
 			}
-                        if (TownyWarConfig.cancapturechunks() == true) {
+			if (TownyWarConfig.cancapturechunks() == true) {
                             // Defender loses townblock
                             TownyUniverse.getDataSource().removeTownBlock(townBlock);
                             // Attacker Claim Automatically
@@ -179,7 +179,7 @@ public class TownyWarCustomListener implements Listener {
                                     // Couldn't claim it.
                             }
 			}
-                        else if (TownyWarConfig.cancapturechunks() == false) {
+			else if (TownyWarConfig.cancapturechunks() == false) {
                             //do nothing
                         }
 			// Cleanup

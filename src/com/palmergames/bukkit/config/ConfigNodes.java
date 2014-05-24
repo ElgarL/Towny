@@ -1116,7 +1116,7 @@ public enum ConfigNodes {
 			"war.enemy.only_attack_borders",
 			"true",
 			"# If true, enemy's can only attack the edge plots of a town with war flags."),
-        WAR_ENEMY_CAPTURE_TOWN_CHUNKS(
+	WAR_ENEMY_CAPTURE_TOWN_CHUNKS(
 			"war.enemy.can_capture_chunks",
 			"true",
 			"# If true, enemy's can capture plots of the town they are attacking with war flags."),
