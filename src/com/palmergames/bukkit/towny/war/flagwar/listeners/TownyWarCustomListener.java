@@ -166,20 +166,22 @@ public class TownyWarCustomListener implements Listener {
 					x.printStackTrace();
 				}
 			}
-
-			// Defender loses townblock
-			//TownyUniverse.getDataSource().removeTownBlock(townBlock);
-
-			// Attacker Claim Automatically
-			//try {
-				//List<WorldCoord> selection = new ArrayList<WorldCoord>();
-				//selection.add(worldCoord);
-				//TownCommand.checkIfSelectionIsValid(attackingTown, selection, false, 0, false);
-				//new TownClaim(plugin, null, attackingTown, selection, false, true, false).start();
-			//} catch (TownyException te) {
-				// Couldn't claim it.
-			//}
-
+                        if (TownyWarConfig.cancapturechunks() == true) {
+                            // Defender loses townblock
+                            TownyUniverse.getDataSource().removeTownBlock(townBlock);
+                            // Attacker Claim Automatically
+                            try {
+                                    List<WorldCoord> selection = new ArrayList<WorldCoord>();
+                                    selection.add(worldCoord);
+                                    TownCommand.checkIfSelectionIsValid(attackingTown, selection, false, 0, false);
+                                    new TownClaim(plugin, null, attackingTown, selection, false, true, false).start();
+                            } catch (TownyException te) {
+                                    // Couldn't claim it.
+                            }
+			}
+                        else if (TownyWarConfig.cancapturechunks() == false) {
+                            //do nothing
+                        }
 			// Cleanup
 			plugin.updateCache(worldCoord);
 
