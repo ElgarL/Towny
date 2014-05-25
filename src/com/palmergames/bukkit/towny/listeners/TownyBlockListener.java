@@ -60,7 +60,7 @@ public class TownyBlockListener implements Listener {
 
 		//Get build permissions (updates cache if none exist)
 		boolean bDestroy = PlayerCacheUtil.getCachePermission(player, block.getLocation(), BukkitTools.getTypeId(block), BukkitTools.getData(block), TownyPermission.ActionType.DESTROY);
-		
+
 		// Allow destroy if we are permitted
 		if (bDestroy)
 			return;
@@ -119,7 +119,7 @@ public class TownyBlockListener implements Listener {
 		Player player = event.getPlayer();
 		Block block = event.getBlock();
 		WorldCoord worldCoord;
-		
+
 		try {
 			TownyWorld world = TownyUniverse.getDataSource().getWorld(block.getWorld().getName());
 			worldCoord = new WorldCoord(world.getName(), Coord.parseCoord(block));
@@ -130,7 +130,7 @@ public class TownyBlockListener implements Listener {
 			// Allow build if we are permitted
 			if (bBuild)
 				return;
-			
+
 			/*
 			 * Fetch the players cache
 			 */
@@ -144,7 +144,6 @@ public class TownyBlockListener implements Listener {
 
 				try {
 					if (TownyWar.callAttackCellEvent(plugin, player, block, worldCoord))
-                                            player.damage(TownyWarConfig.blockgriefingdamage());
 						return;
 				} catch (TownyException e) {
 					TownyMessaging.sendErrorMsg(player, e.getMessage());
@@ -163,7 +162,6 @@ public class TownyBlockListener implements Listener {
 			} else {
 				event.setBuild(false);
 				event.setCancelled(true);
-                                player.damage(TownyWarConfig.blockgriefingdamage());
 			}
 
 			/* 
