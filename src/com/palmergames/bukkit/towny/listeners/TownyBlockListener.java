@@ -77,6 +77,7 @@ public class TownyBlockListener implements Listener {
 			if (!TownyWarConfig.isEditableMaterialInWarZone(block.getType())) {
 				event.setCancelled(true);
 				TownyMessaging.sendErrorMsg(player, String.format(TownySettings.getLangString("msg_err_warzone_cannot_edit_material"), "destroy", block.getType().toString().toLowerCase()));
+                                player.damage(TownyWarConfig.blockgriefingdamage());
 			}
 			return;
 		}
@@ -144,6 +145,7 @@ public class TownyBlockListener implements Listener {
 
 				try {
 					if (TownyWar.callAttackCellEvent(plugin, player, block, worldCoord))
+                                            player.damage(TownyWarConfig.blockgriefingdamage());
 						return;
 				} catch (TownyException e) {
 					TownyMessaging.sendErrorMsg(player, e.getMessage());
@@ -157,6 +159,7 @@ public class TownyBlockListener implements Listener {
 					event.setBuild(false);
 					event.setCancelled(true);
 					TownyMessaging.sendErrorMsg(player, String.format(TownySettings.getLangString("msg_err_warzone_cannot_edit_material"), "build", block.getType().toString().toLowerCase()));
+                                        player.damage(TownyWarConfig.blockgriefingdamage());
 				}
 				return;
 			} else {
