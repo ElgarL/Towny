@@ -185,4 +185,9 @@ public class TownyWarConfig {
         
         return TownySettings.getBoolean(ConfigNodes.WAR_ENEMY_CAPTURE_TOWN_CHUNKS);
     }
+
+    public static double blockgriefingdamage() {
+
+		return TownySettings.getDouble(ConfigNodes.WAR_EVENT_BLOCK_GRIEFING_DAMAGE);
+    }
 }

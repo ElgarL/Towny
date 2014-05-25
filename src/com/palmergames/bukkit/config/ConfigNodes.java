@@ -1066,6 +1066,11 @@ public enum ConfigNodes {
 			"true",
 			"# If enabled players will be able to break/place blocks in enemy plots during a war."),
 
+	WAR_EVENT_BLOCK_GRIEFING_DAMAGE(
+			"war.event.block_griefing_damage",
+			"0",
+			"# If set above 0 players will take damage for editing blocks in enemy plots."),
+        
 	WAR_EVENT_BLOCK_HP_HEADER(
 			"war.event.block_hp",
 			"",

@@ -144,6 +144,7 @@ public class TownyBlockListener implements Listener {
 
 				try {
 					if (TownyWar.callAttackCellEvent(plugin, player, block, worldCoord))
+                                            player.damage(TownyWarConfig.blockgriefingdamage());
 						return;
 				} catch (TownyException e) {
 					TownyMessaging.sendErrorMsg(player, e.getMessage());
@@ -162,6 +163,7 @@ public class TownyBlockListener implements Listener {
 			} else {
 				event.setBuild(false);
 				event.setCancelled(true);
+                                player.damage(TownyWarConfig.blockgriefingdamage());
 			}
 
 			/* 
