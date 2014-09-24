@@ -231,7 +231,7 @@ public class FileMgmt {
 
 			//BufferedWriter out = new BufferedWriter(new FileWriter(FileName));
 
-			source.replaceAll("\n", System.getProperty("line.separator"));
+			source = source.replaceAll("\n", System.getProperty("line.separator"));
 
 			out.write(source);
 			out.close();
@@ -428,7 +428,7 @@ public class FileMgmt {
 								}
 							}
 	
-						} catch (Exception e) {
+						} catch (Exception e) {r
 							// Ignore file
 						}
 					}
