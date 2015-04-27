@@ -180,4 +180,9 @@ public class TownyWarConfig {
 
         return TownySettings.getBoolean(ConfigNodes.WAR_ENEMY_ONLY_ATTACK_BORDER);
     }
+    
+    public static boolean cancapturechunks() {
+        
+        return TownySettings.getBoolean(ConfigNodes.WAR_ENEMY_CAPTURE_TOWN_CHUNKS);
+    }
 }
