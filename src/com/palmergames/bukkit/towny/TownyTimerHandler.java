@@ -13,6 +13,7 @@ import static com.palmergames.bukkit.towny.object.TownyObservableType.TOGGLE_TEL
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import com.palmergames.bukkit.towny.event.NewDayEvent;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.tasks.DailyTimerTask;
 import com.palmergames.bukkit.towny.tasks.HealthRegenTimerTask;
@@ -22,6 +23,7 @@ import com.palmergames.bukkit.towny.tasks.TeleportWarmupTimerTask;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.util.TimeMgmt;
 import com.palmergames.util.TimeTools;
+import org.bukkit.Bukkit;
 
 
 /**
@@ -52,13 +54,22 @@ public class TownyTimerHandler{
 		if (!isDailyTimerRunning())
 			toggleDailyTimer(true);
 		//dailyTimer.schedule(new DailyTimerTask(this), 0);
+		NewDayEvent event = null;
 		if (TownySettings.isEconomyAsync()) {
-			if (BukkitTools.scheduleAsyncDelayedTask(new DailyTimerTask(plugin),0L) == -1)
+			if (BukkitTools.scheduleAsyncDelayedTask(new DailyTimerTask(plugin),0L) == -1) {
 				TownyMessaging.sendErrorMsg("Could not schedule newDay.");
+			} else {
+				event = new NewDayEvent(true);
+			}
 		} else {
-			if (BukkitTools.scheduleSyncDelayedTask(new DailyTimerTask(plugin),0L) == -1)
+			if (BukkitTools.scheduleSyncDelayedTask(new DailyTimerTask(plugin), 0L) == -1) {
 				TownyMessaging.sendErrorMsg("Could not schedule newDay.");
+			} else {
+				event = new NewDayEvent(false);
+			}
 		}
+		if (event != null)
+			BukkitTools.getPluginManager().callEvent(event);
 		universe.setChangedNotify(NEW_DAY);
 	}
 

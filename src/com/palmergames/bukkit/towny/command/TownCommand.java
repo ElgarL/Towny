@@ -7,6 +7,7 @@ import com.earth2me.essentials.Teleport;
 import com.earth2me.essentials.User;
 import com.palmergames.bukkit.towny.*;
 import com.palmergames.bukkit.towny.event.NewTownEvent;
+import com.palmergames.bukkit.towny.event.PlayerTownTeleportEvent;
 import com.palmergames.bukkit.towny.exceptions.*;
 import com.palmergames.bukkit.towny.object.*;
 import com.palmergames.bukkit.towny.permissions.PermissionNodes;
@@ -1262,13 +1263,18 @@ public class TownCommand extends BaseCommand implements CommandExecutor {
 	 * @param outpost
 	 */
 	public static void townSpawn(Player player, String[] split, Town town, String notAffordMSG, Boolean outpost) {
-
+		PlayerTownTeleportEvent event = new PlayerTownTeleportEvent(player, town, outpost);
+		BukkitTools.getPluginManager().callEvent(event);
+		if (event.isCancelled())
+			return;
+		town = event.getDestination();
 		try {
 
 			boolean isTownyAdmin = TownyUniverse.getPermissionSource().isTownyAdmin(player);
 			Resident resident = TownyUniverse.getDataSource().getResident(player.getName());
 			Location spawnLoc;
 			TownSpawnLevel townSpawnPermission;
+
 
 			if (outpost) {
 
@@ -1286,9 +1292,9 @@ public class TownCommand extends BaseCommand implements CommandExecutor {
 					index = 1;
 				}
 				spawnLoc = town.getOutpostSpawn(Math.max(1, index));
-			} else
+			} else {
 				spawnLoc = town.getSpawn();
-
+			}
 			// Determine conditions
 			if (isTownyAdmin) {
 				townSpawnPermission = TownSpawnLevel.ADMIN;
