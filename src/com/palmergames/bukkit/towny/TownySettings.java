@@ -18,6 +18,8 @@ import org.bukkit.Material;
 
 import com.palmergames.bukkit.config.CommentedConfiguration;
 import com.palmergames.bukkit.config.ConfigNodes;
+import com.palmergames.bukkit.towny.event.TownyNationUpkeepEvent;
+import com.palmergames.bukkit.towny.event.TownyTownUpkeepEvent;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -1467,8 +1469,10 @@ public class TownySettings {
 			}
 		} else
 			multiplier = 1.0;
-
-		return getTownUpkeep() * multiplier;
+		
+		TownyTownUpkeepEvent townUpkeepEvent = new TownyTownUpkeepEvent(town,getTownUpkeep()*multiplier);
+		BukkitTools.getPluginManager().callEvent(townUpkeepEvent);
+		return townUpkeepEvent.getUpkeep();
 	}
 
 	public static double getTownUpkeep() {
@@ -1500,7 +1504,9 @@ public class TownySettings {
 		else
 			multiplier = 1.0;
 
-		return getNationUpkeep() * multiplier;
+		TownyNationUpkeepEvent nationUpkeepEvent = new TownyNationUpkeepEvent(nation,getNationUpkeep()*multiplier);
+		BukkitTools.getPluginManager().callEvent(nationUpkeepEvent);
+		return nationUpkeepEvent.getUpkeep();
 	}
 
 	public static String getFlatFileBackupType() {
