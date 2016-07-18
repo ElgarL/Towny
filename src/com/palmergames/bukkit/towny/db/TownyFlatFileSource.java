@@ -563,6 +563,18 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 				line = kvFile.get("isNPC");
 				if (line != null)
 					resident.setNPC(Boolean.parseBoolean(line));
+				
+				line = kvFile.get("isJailed");
+				if (line != null)
+					resident.setJailed(Boolean.parseBoolean(line));
+				
+				line = kvFile.get("JailSpawn");
+				if (line != null)
+					resident.setJailSpawn(Integer.valueOf(line));
+				
+				line = kvFile.get("JailTown");
+				if (line != null)
+					resident.setJailTown(line);
 
 				line = kvFile.get("title");
 				if (line != null)
@@ -880,6 +892,32 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 									loc.setYaw(Float.parseFloat(tokens[5]));
 								}
 								town.forceAddOutpostSpawn(loc);
+							} catch (NumberFormatException e) {
+							} catch (NotRegisteredException e) {
+							} catch (NullPointerException e) {
+							}
+					}
+				}
+				
+				// Load jail spawns
+				line = kvFile.get("jailspawns");
+				if (line != null) {
+					String[] jails = line.split(";");
+					for (String spawn : jails) {
+						tokens = spawn.split(",");
+						if (tokens.length >= 4)
+							try {
+								World world = plugin.getServerWorld(tokens[0]);
+								double x = Double.parseDouble(tokens[1]);
+								double y = Double.parseDouble(tokens[2]);
+								double z = Double.parseDouble(tokens[3]);
+
+								Location loc = new Location(world, x, y, z);
+								if (tokens.length == 6) {
+									loc.setPitch(Float.parseFloat(tokens[4]));
+									loc.setYaw(Float.parseFloat(tokens[5]));
+								}
+								town.forceAddJailSpawn(loc);
 							} catch (NumberFormatException e) {
 							} catch (NotRegisteredException e) {
 							} catch (NullPointerException e) {
@@ -1295,7 +1333,7 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 			//boolean set = false;
 
 			File fileTownBlock = new File(path);
-			if (fileTownBlock.exists() && fileTownBlock.isFile()) {
+			if (fileTownBlock.exists() && fileTownBlock.isFile()) {				
 				try {
 					KeyValueFile kvFile = new KeyValueFile(path);
 
@@ -1364,6 +1402,15 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 							townBlock.setLocked(Boolean.parseBoolean(line.trim()));
 						} catch (Exception e) {
 						}
+					
+					line = kvFile.getString("town");
+					if (line.isEmpty()) {
+						TownyMessaging.sendDebugMsg("TownBlock file missing Town, deleting " + path);
+						deleteTownBlock(townBlock);
+						TownyMessaging.sendDebugMsg("Missing file: " + path + " deleting entry in townblocks.txt");
+						TownyWorld world = townBlock.getWorld();
+						world.removeTownBlock(townBlock);	
+					}						
 
 				} catch (Exception e) {
 					TownyMessaging.sendErrorMsg("Loading Error: Exception while reading TownBlock file " + path);
@@ -1382,8 +1429,13 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 				//						// Will never reach here
 				//					}
 				//				}
+			} else {
+				TownyMessaging.sendDebugMsg("Missing file: " + path + " deleting entry in townblocks.txt");
+				TownyWorld world = townBlock.getWorld();
+				world.removeTownBlock(townBlock);			
 			}
-		}
+		}		
+		saveTownBlockList();
 
 		return true;
 	}
@@ -1398,7 +1450,7 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 		List<String> list = new ArrayList<String>();
 
 		for (TownBlock townBlock : getAllTownBlocks()) {
-
+			
 			list.add(townBlock.getWorld().getName() + "," + townBlock.getX() + "," + townBlock.getZ());
 
 		}
@@ -1513,7 +1565,14 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 		list.add("registered=" + Long.toString(resident.getRegistered()));
 		// isNPC
 		list.add("isNPC=" + Boolean.toString(resident.isNPC()));
-		// title
+		// isJailed
+		list.add("isJailed=" + Boolean.toString(resident.isJailed()));
+		// JailSpawn
+		list.add("JailSpawn=" + Integer.toString(resident.getJailSpawn()));
+		// JailTown
+		list.add("JailTown=" + resident.getJailTown());
+
+		// title		
 		list.add("title=" + resident.getTitle());
 		// surname
 		list.add("surname=" + resident.getSurname());
@@ -1627,6 +1686,15 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 			list.add(outpostArray);
 		}
 
+		// Jail Spawns
+		if (town.hasJailSpawn()) {
+			String jailArray = "jailspawns=";
+			for (Location spawn : new ArrayList<Location>(town.getAllJailSpawns())) {
+				jailArray += (spawn.getWorld().getName() + "," + Double.toString(spawn.getX()) + "," + Double.toString(spawn.getY()) + "," + Double.toString(spawn.getZ()) + "," + Float.toString(spawn.getPitch()) + "," + Float.toString(spawn.getYaw()) + ";");
+			}
+			list.add(jailArray);
+		}
+		
 		/*
 		 *  Make sure we only save in async
 		 */
@@ -1657,7 +1725,7 @@ public class TownyFlatFileSource extends TownyDatabaseHandler {
 
 		// Taxes
 		list.add("taxes=" + Double.toString(nation.getTaxes()));
-		// Neutral
+		// Peaceful
 		list.add("neutral=" + Boolean.toString(nation.isNeutral()));
 
 		/*

@@ -56,7 +56,7 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "unclaim [radius]", ""));
 		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "town/nation", ""));
 		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "givebonus [town/player] [num]", ""));
-		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "toggle neutral/war/debug/devmode", ""));
+		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "toggle peaceful/war/debug/devmode", ""));
 		ta_help.add(ChatTools.formatCommand("", "/townyadmin", "resident/town/nation", ""));
 
 		// TODO: ta_help.add(ChatTools.formatCommand("", "/townyadmin",
@@ -224,6 +224,9 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 			try {
 				town.setBonusBlocks(town.getBonusBlocks() + Integer.parseInt(split[1].trim()));
 				TownyMessaging.sendMsg(getSender(), String.format(TownySettings.getLangString("msg_give_total"), town.getName(), split[1], town.getBonusBlocks()));
+				TownyMessaging.sendTownMessagePrefixed(town, "You have been given " + Integer.parseInt(split[1].trim()) + " bonus townblocks.");
+				TownyMessaging.sendTownMessagePrefixed(town, "If you have paid any real-life money for these townblocks please understand: the creators of Towny do not condone this transaction, the server you play on breaks the Minecraft EULA and, worse, is selling a part of Towny which your server admin did not create.");
+				TownyMessaging.sendTownMessagePrefixed(town, "You should consider changing servers and requesting a refund of your money.");
 			} catch (NumberFormatException nfe) {
 				throw new TownyException(TownySettings.getLangString("msg_error_must_be_int"));
 			}
@@ -369,6 +372,7 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 			} else if (split[1].equalsIgnoreCase("delete")) {
 
 				TownyUniverse.getDataSource().removeTown(town);
+				TownyMessaging.sendMessage(sender, town + " deleted.");
 
 			} else if (split[1].equalsIgnoreCase("rename")) {
 
@@ -454,6 +458,7 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 			// "/townyadmin set", "king [nation] [king]", ""));
 			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "mayor [town] " + TownySettings.getLangString("town_help_2"), ""));
 			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "mayor [town] npc", ""));
+			sender.sendMessage(ChatTools.formatCommand("", "/townyadmin set", "capital [town]", ""));
 			// player.sendMessage(ChatTools.formatCommand("", "/townyadmin set",
 			// "debugmode [on/off]", ""));
 			// player.sendMessage(ChatTools.formatCommand("", "/townyadmin set",
@@ -539,6 +544,12 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 				
 				try {
 					Town newCapital = TownyUniverse.getDataSource().getTown(split[1]);
+					
+			        if ((TownySettings.getNumResidentsCreateNation() > 0) && (newCapital.getNumResidents() < TownySettings.getNumResidentsCreateNation())) {
+			            TownyMessaging.sendErrorMsg(this.player, String.format(TownySettings.getLangString("msg_not_enough_residents_capital"), newCapital.getName()));
+			            return;
+			        }
+			        
 					Nation nation = newCapital.getNation();
 					
 					nation.setCapital(newCapital);
@@ -699,7 +710,7 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 			// command was '/townyadmin toggle'
 			player.sendMessage(ChatTools.formatTitle("/townyadmin toggle"));
 			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "war", ""));
-			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "neutral", ""));
+			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "peaceful", ""));
 			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "devmode", ""));
 			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "debug", ""));
 			player.sendMessage(ChatTools.formatCommand("", "/townyadmin toggle", "townwithdraw/nationwithdraw", ""));
@@ -721,12 +732,12 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 				plugin.getTownyUniverse().endWarEvent();
 				TownyMessaging.sendMsg(getSender(), TownySettings.getLangString("msg_war_ended"));
 			}
-		} else if (split[0].equalsIgnoreCase("neutral")) {
+		} else if (split[0].equalsIgnoreCase("peaceful") || split[0].equalsIgnoreCase("neutral")) {
 
 			try {
 				choice = !TownySettings.isDeclaringNeutral();
 				TownySettings.setDeclaringNeutral(choice);
-				TownyMessaging.sendMsg(getSender(), String.format(TownySettings.getLangString("msg_nation_allow_neutral"), choice ? "Enabled" : "Disabled"));
+				TownyMessaging.sendMsg(getSender(), String.format(TownySettings.getLangString("msg_nation_allow_peaceful"), choice ? "Enabled" : "Disabled"));
 
 			} catch (Exception e) {
 				TownyMessaging.sendErrorMsg(getSender(), TownySettings.getLangString("msg_err_invalid_choice"));
@@ -785,7 +796,7 @@ public class TownyAdminCommand extends BaseCommand implements CommandExecutor {
 			
 		} else {
 			// parameter error message
-			// neutral/war/townmobs/worldmobs
+			// peaceful/war/townmobs/worldmobs
 			TownyMessaging.sendErrorMsg(getSender(), TownySettings.getLangString("msg_err_invalid_choice"));
 		}
 	}

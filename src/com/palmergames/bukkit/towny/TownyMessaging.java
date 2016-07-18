@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -289,7 +290,13 @@ public class TownyMessaging {
 		TownyLogger.log.info(ChatTools.stripColour("[Global Message] " + line));
 		for (Player player : BukkitTools.getOnlinePlayers()) {
 			if (player != null)
-				player.sendMessage(line);
+				try {
+					if (TownyUniverse.getDataSource().getWorld(player.getLocation().getWorld().getName()).isUsingTowny())
+						player.sendMessage(line);
+				} catch (NotRegisteredException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 
@@ -446,6 +453,20 @@ public class TownyMessaging {
 	public static void sendMessageToMode(Town town, String msg, String modeRequired) {
 
 		for (Resident resident : town.getResidents())
+			if (BukkitTools.isOnline(resident.getName()))
+				sendMessage(resident,msg);
+	}
+	
+	/**
+	 * Send a message to all residents in the nation with the required mode
+	 * 
+	 * @param nation
+	 * @param msg
+	 * @param modeRequired
+	 */
+	public static void sendMessageToMode(Nation nation, String msg, String modeRequired) {
+
+		for (Resident resident : nation.getResidents())
 			if (BukkitTools.isOnline(resident.getName()))
 				sendMessage(resident,msg);
 	}

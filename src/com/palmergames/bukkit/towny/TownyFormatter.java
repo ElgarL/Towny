@@ -159,10 +159,16 @@ public class TownyFormatter {
 			if (!resident.getNationRanks().isEmpty())
 				out.add(Colors.Green + "Nation Ranks: " + Colors.LightGreen + StringMgmt.join(resident.getNationRanks(), ","));
 		}
-
+		
+		// Jailed: yes if they are jailed.
+		if (resident.isJailed()){
+			out.add(Colors.Green + "Jailed: Yes" + " in Town: " + resident.getJailTown());
+		}
+		
 		// Friends [12]: James, Carry, Mason
 		List<Resident> friends = resident.getFriends();
 		out.addAll(getFormattedResidents("Friends", friends));
+		
 
 		return out;
 	}
@@ -319,9 +325,9 @@ public class TownyFormatter {
 		if (nation.isNeutral()) {
 			if (line.length() > 0)
 				line += Colors.Gray + " | ";
-			line += Colors.LightGray + "Neutral";
+			line += Colors.LightGray + "Peaceful";
 		}
-		// Bank: 534 coins | Neutral
+		// Bank: 534 coins | Peaceful
 		if (line.length() > 0)
 			out.add(line);
 

@@ -671,6 +671,16 @@ public abstract class TownyDatabaseHandler extends TownyDataSource {
 				saveResident(resident);
 			}
 
+			//search and update all resident's jailTown with new name.
+
+            for (Resident toCheck : getResidents()){
+                    if (toCheck.hasJailTown(oldName)) {
+                        toCheck.setJailTown(newName);
+                        
+                        saveResident(toCheck);
+                    }
+            }
+            
 			// Update all townBlocks with the new name
 
 			for (TownBlock townBlock : town.getTownBlocks()) {
@@ -811,9 +821,13 @@ public abstract class TownyDatabaseHandler extends TownyDataSource {
 			long registered = 0L;		
 			long lastOnline = 0L;
 			boolean isMayor = false;
+			boolean isJailed = false;
+			int JailSpawn = 0;
+			
+			boolean transferBalance = !TownyEconomyHandler.hasEconomyAccount(filteredName);
 			
 			//get data needed for resident
-			if(TownySettings.isUsingEconomy()){
+			if(transferBalance && TownySettings.isUsingEconomy()){
 				try {
 					balance = resident.getHoldingBalance();
 					resident.removeAccount();
@@ -833,6 +847,8 @@ public abstract class TownyDatabaseHandler extends TownyDataSource {
 			registered = resident.getRegistered();			
 			lastOnline = resident.getLastOnline();
 			isMayor = resident.isMayor();
+			isJailed = resident.isJailed();
+			JailSpawn = resident.getJailSpawn();
 			
 			//delete the resident and tidy up files
 			deleteResident(resident);
@@ -844,7 +860,7 @@ public abstract class TownyDatabaseHandler extends TownyDataSource {
 			universe.getResidentMap().put(filteredName.toLowerCase(), resident);
 			
 			//add everything back to the resident
-			if (TownySettings.isUsingEconomy()) {
+			if (transferBalance && TownySettings.isUsingEconomy()) {
 				//TODO
 				try {
 					resident.setBalance(balance, "Rename Player - Transfer to new account");
@@ -868,6 +884,8 @@ public abstract class TownyDatabaseHandler extends TownyDataSource {
 				} catch (TownyException e) {					
 				}
 			}
+			resident.setJailed(isJailed);
+			resident.setJailSpawn(JailSpawn);
 			
 			//save stuff
 			saveResidentList();

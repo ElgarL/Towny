@@ -103,8 +103,9 @@ public class CombatUtil {
 	 * @param attackingPlayer
 	 * @param defendingPlayer
 	 * @return true if we should cancel.
+	 * @throws NotRegisteredException 
 	 */
-	public static boolean preventDamageCall(Towny plugin, TownyWorld world, Entity attackingEntity, Entity defendingEntity, Player attackingPlayer, Player defendingPlayer) {
+	public static boolean preventDamageCall(Towny plugin, TownyWorld world, Entity attackingEntity, Entity defendingEntity, Player attackingPlayer, Player defendingPlayer) throws NotRegisteredException {
 
 		// World using Towny
 		if (!world.isUsingTowny())
@@ -174,8 +175,17 @@ public class CombatUtil {
 				 * Defender is not a player so check for PvM
 				 */
 				if (defenderTB != null) {
+					Resident AttackingResident = null;
+					if(defenderTB.getType() == TownBlockType.FARM) {
+						AttackingResident = TownyUniverse.getDataSource().getResident(attackingPlayer.getName());
+						if (!AttackingResident.hasTown())
+							return true;
+						if (TownySettings.getFarmAnimals().contains(defendingEntity.getType().toString()) && (defenderTB.getTown() == AttackingResident.getTown()))
+							return false;
+					}
 					List<Class<?>> prots = EntityTypeUtil.parseLivingEntityClassNames(TownySettings.getEntityTypes(), "TownMobPVM:");
 					if (EntityTypeUtil.isInstanceOfAny(prots, defendingEntity)) {
+						
 						/*
 						 * Only allow the player to kill protected entities etc,
 						 * if they are from the same town
@@ -185,7 +195,6 @@ public class CombatUtil {
 						if (!PlayerCacheUtil.getCachePermission(attackingPlayer, attackingPlayer.getLocation(), 3, (byte) 0, ActionType.DESTROY))
 							return true;
 					}
-
 				}
 
 				/*

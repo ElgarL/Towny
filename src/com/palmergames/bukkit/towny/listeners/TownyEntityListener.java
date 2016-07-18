@@ -8,9 +8,11 @@ import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -142,12 +144,12 @@ public class TownyEntityListener implements Listener {
 
 		TownyWorld townyWorld = null;
 		
-		Entity entity = event.getEntity();
-				
-		if (entity instanceof ArmorStand) {
+		Entity entity = event.getEntity();		
+		
+		if (entity instanceof ArmorStand || entity instanceof ItemFrame || entity instanceof Animals) {
 			String damager = event.getDamager().getType().name();
 
-			if (damager == "PRIMED_TNT" || damager == "WITHER_SKULL" || damager == "FIREBALL" || damager == "SMALL_FIREBALL" || damager == "LARGE_FIREBALL" || damager == "WITHER") {
+			if (damager == "PRIMED_TNT" || damager == "WITHER_SKULL" || damager == "FIREBALL" || damager == "SMALL_FIREBALL" || damager == "LARGE_FIREBALL" || damager == "WITHER" || damager == "CREEPER") {
 											
 				try {
 					townyWorld = TownyUniverse.getDataSource().getWorld(entity.getWorld().getName());
@@ -182,11 +184,6 @@ public class TownyEntityListener implements Listener {
 					// Allow the removal if we are permitted
 					if (bDestroy)
 						return;
-
-					/*
-					 * Fetch the players cache
-					 */
-					PlayerCache cache = plugin.getCache(player);
 
 					event.setCancelled(true);
 				}
@@ -554,7 +551,6 @@ public class TownyEntityListener implements Listener {
 				return;
 			}
 
-			// TODO: expand to protect neutrals during a war
 			try {
 				TownBlock townBlock = townyWorld.getTownBlock(coord);
 
@@ -765,4 +761,23 @@ public class TownyEntityListener implements Listener {
 		TownyMessaging.sendDebugMsg("onHangingBreak took " + (System.currentTimeMillis() - start) + "ms (" + event.getEventName() + ", " + event.isCancelled() + ")");
 	}
 
+//	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+//	public void onEntityDamageByBlock(EntityDamageByBlockEvent event) {
+//		DamageCause type = event.getCause();
+//		Location loc = event.getDamager().getLocation();
+//		TownyWorld townyWorld = null;
+
+//		if (type == DamageCause.BLOCK_EXPLOSION) {
+//			try {
+//				townyWorld = TownyUniverse.getDataSource().getWorld(loc.getWorld().getName());
+//				if (!locationCanExplode(townyWorld, loc)) {
+//					event.setCancelled(true);
+//					return;
+//				}
+//			} catch (NotRegisteredException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 }

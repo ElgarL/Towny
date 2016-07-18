@@ -17,12 +17,12 @@ public class TownBlock {
 	private int x, z;
 	private double plotPrice = -1;
 	private boolean locked = false;
-	private boolean outpost = false;
+	private boolean outpost = false;	
 
 	//Plot level permissions
 	protected TownyPermission permissions = new TownyPermission();
 	protected boolean isChanged;
-
+	
 	public TownBlock(int x, int z, TownyWorld world) {
 
 		this.x = x;
@@ -226,7 +226,12 @@ public class TownBlock {
 			
 		case WILDS:
 			
-			setPermissions("denyAll");
+			if (this.hasResident()) {
+				setPermissions(this.resident.permissions.toString());
+			} else {
+				setPermissions(this.town.permissions.toString());
+			}
+			
 			break;
 		
 		case SPLEEF:
@@ -239,6 +244,20 @@ public class TownBlock {
 			setPermissions("residentSwitch,allySwitch,outsiderSwitch");
 			break;
 			
+		case JAIL:
+			
+			setPermissions("denyAll");
+			break;
+		
+		case FARM:
+			
+			if (this.hasResident()) {
+				setPermissions(this.resident.permissions.toString());
+			} else {
+				setPermissions(this.town.permissions.toString());
+			}
+			
+			break;
 		}
 		
 		// Set the changed status.
@@ -254,14 +273,18 @@ public class TownBlock {
 	public void setType(String typeName) throws TownyException {
 
 		if (typeName.equalsIgnoreCase("reset"))
-			typeName = "default";
+			typeName = "default";					
 		
 		TownBlockType type = TownBlockType.lookup(typeName);
 		
 		if (type == null)
 			throw new TownyException(TownySettings.getLangString("msg_err_not_block_type"));
 		
+		if (this.isJail())
+			this.getTown().removeJailSpawn(this.getCoord());
+		
 		setType(type);
+		
 	}
 
 	public boolean isHomeBlock() {
@@ -369,5 +392,14 @@ public class TownBlock {
 	public boolean isWarZone() {
 
 		return getWorld().isWarZone(getCoord());
+	}
+
+	public boolean isJail() {
+		
+		if (this.getType() == getType().JAIL) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

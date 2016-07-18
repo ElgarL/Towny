@@ -42,6 +42,7 @@ import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.PlayerCache;
 import com.palmergames.bukkit.towny.object.PlayerCache.TownBlockStatus;
 import com.palmergames.bukkit.towny.object.Resident;
+import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownBlockType;
 import com.palmergames.bukkit.towny.object.TownyPermission;
@@ -125,20 +126,32 @@ public class TownyPlayerListener implements Listener {
 
 		try {
 			Location respawn = plugin.getTownyUniverse().getTownSpawnLocation(player);
-
-			// Check if only respawning in the same world as the town's spawn.
-			if (TownySettings.isTownRespawningInOtherWorlds() && !player.getWorld().equals(respawn.getWorld()))
-				return;
-
-			// Bed spawn or town.
-			if (TownySettings.getBedUse() && (player.getBedSpawnLocation() != null)) {
-
-				event.setRespawnLocation(player.getBedSpawnLocation());
-
-			} else {
-
+			
+			Resident resident = TownyUniverse.getDataSource().getResident(player.getName());
+			// If player is jailed send them to their jailspawn.
+			if (resident.isJailed()) {
+				Town respawnTown = TownyUniverse.getDataSource().getTown(resident.getJailTown()); 
+				respawn = respawnTown.getJailSpawn(resident.getJailSpawn());
+				resident.setJailed(false);
 				event.setRespawnLocation(respawn);
+				resident.setJailed(true);
+				return;
+			} else {				
 
+				// Check if only respawning in the same world as the town's spawn.
+				if (TownySettings.isTownRespawningInOtherWorlds() && !player.getWorld().equals(respawn.getWorld()))
+					return;
+		
+				// Bed spawn or town.
+				if (TownySettings.getBedUse() && (player.getBedSpawnLocation() != null)) {
+		
+					event.setRespawnLocation(player.getBedSpawnLocation());
+		
+				} else {
+		
+					event.setRespawnLocation(respawn);
+		
+				}
 			}
 
 		} catch (TownyException e) {
@@ -573,9 +586,25 @@ public class TownyPlayerListener implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPlayerTeleport(PlayerTeleportEvent event) {
 
+
+		Player player = event.getPlayer();
+		// Cancel teleport if Jailed by Towny.
+		try {
+			if (TownyUniverse.getDataSource().getResident(player.getName()).isJailed()) {
+				if ((event.getCause() == TeleportCause.ENDER_PEARL) && (TownySettings.JailAllowsEnderPearls())) {
+					
+				} else {
+					TownyMessaging.sendErrorMsg(event.getPlayer(), Colors.Red + "Jailed players cannot be teleported!");
+					event.setCancelled(true);					
+				}				
+			}
+		} catch (NotRegisteredException e) {
+			// Not a valid resident, probably an NPC from Citizens.
+		}
+			
 		/*
 		 * Test to see if Ender pearls are disabled.
-		 */
+		 */		
 		if (event.getCause() == TeleportCause.ENDER_PEARL) {
 
 			if (TownySettings.isItemUseMaterial(Material.ENDER_PEARL.name())) {
@@ -768,5 +797,35 @@ public class TownyPlayerListener implements Listener {
 
 		PlayerChangePlotEvent event = new PlayerChangePlotEvent(player, from, to, moveEvent);
 		Bukkit.getServer().getPluginManager().callEvent(event);
+	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onPlayerChangePlotEvent(PlayerChangePlotEvent event) {
+		
+		Player player = event.getPlayer();
+		try {
+			if (TownyUniverse.getDataSource().getResident(player.getName()).isJailed()) {
+				Resident resident = TownyUniverse.getDataSource().getResident(player.getName());
+				WorldCoord from = event.getFrom();
+				WorldCoord to = event.getTo();
+				//TownyMessaging.sendMsg(from.toString() + to.toString());
+				
+				if (from.getTownBlock().hasTown()) {
+					try {
+						to.getTownBlock();
+					} catch (NotRegisteredException e) {
+						resident.setJailed(false);
+						resident.setJailSpawn(0);
+						resident.setJailTown("");
+						TownyMessaging.sendGlobalMessage(Colors.Red + player.getName() + " has escaped jail by running into the " + TownyUniverse.getDataSource().getWorld(player.getLocation().getWorld().getName()).getUnclaimedZoneName());
+						TownyUniverse.getDataSource().saveResident(resident);
+						
+					}
+				}
+			}
+		} catch (NotRegisteredException e) {
+			// If not registered, it is most likely an NPC			
+		}
+		
 	}
 }

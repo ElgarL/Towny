@@ -77,6 +77,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 		towny_war.add(ChatTools.formatTitle("/towny war"));
 		towny_war.add(ChatTools.formatCommand("", "/towny war", "stats", ""));
 		towny_war.add(ChatTools.formatCommand("", "/towny war", "scores", ""));
+		towny_war.add(ChatTools.formatCommand("", "/towny war", "hud", ""));
 
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
@@ -94,10 +95,11 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("version") || args[0].equalsIgnoreCase("v"))
 				sender.sendMessage(Colors.strip(towny_version));
 			else if (args[0].equalsIgnoreCase("war")) {
-				boolean war = TownyWar(StringMgmt.remFirstArg(args));
-				for (String line : towny_war)
-					sender.sendMessage(Colors.strip(line));
-				if (!war)
+				boolean war = TownyWar(StringMgmt.remFirstArg(args), null);
+				if (war)
+					for (String line : towny_war)
+						sender.sendMessage(Colors.strip(line));
+				else
 					sender.sendMessage("The world isn't currently at war.");
 
 				towny_war.clear();
@@ -165,10 +167,11 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 			} else if (split[0].equalsIgnoreCase("version") || split[0].equalsIgnoreCase("v")) {
 				player.sendMessage(towny_version);
 			} else if (split[0].equalsIgnoreCase("war")) {
-				boolean war = TownyWar(StringMgmt.remFirstArg(split));
-				for (String line : towny_war)
-					player.sendMessage(Colors.strip(line));
-				if (!war)
+				boolean war = TownyWar(StringMgmt.remFirstArg(split), player);
+				if (war)
+					for (String line : towny_war)
+						player.sendMessage(Colors.strip(line));
+				else
 					sendErrorMsg(player, "The world isn't currently at war.");
 
 				towny_war.clear();
@@ -191,7 +194,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 	}
 
-	private boolean TownyWar(String[] args) {
+	private boolean TownyWar(String[] args, Player p) {
 
 		if (TownyUniverse.isWarTime() && args.length > 0) {
 			towny_war.clear();
@@ -199,6 +202,15 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 				towny_war.addAll(plugin.getTownyUniverse().getWarEvent().getStats());
 			else if (args[0].equalsIgnoreCase("scores"))
 				towny_war.addAll(plugin.getTownyUniverse().getWarEvent().getScores(-1));
+			else if (args[0].equalsIgnoreCase("hud") && p == null)
+				towny_war.add("No hud for console!");
+			else if (args[0].equalsIgnoreCase("hud") && p != null) {
+				if (plugin.isPermissions() && TownyUniverse.getPermissionSource().has(p, PermissionNodes.TOWNY_COMMAND_TOWNY_WAR_HUD.getNode())) {
+					plugin.getHUDManager().toggleWarHUD(p);
+				} else {
+					TownyMessaging.sendErrorMsg(p, TownySettings.getLangString("msg_err_command_disable"));
+				}
+			}
 		}
 
 		return TownyUniverse.isWarTime();
@@ -281,7 +293,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 	/*
 	 * [New] Town: 100 | Nation: 500 [Upkeep] Town: 10 | Nation: 100 Town
 	 * [Elden]: [Price] Plot: 100 | Outpost: 250 [Upkeep] Resident: 20 | Plot:
-	 * 50 Nation [Albion]: [Upkeep] Town: 100 | Neutrality: 100
+	 * 50 Nation [Albion]: [Upkeep] Town: 100 | Peace: 100
 	 */
 
 	// TODO: Proceduralize and make parse function for /towny prices [town]
@@ -301,7 +313,10 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 		output.add(ChatTools.formatTitle("Prices"));
 		output.add(Colors.Yellow + "[New] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNewTownPrice()) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNewNationPrice()));
-		output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeepCost(town)) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeepCost(nation)));
+		if (town != null)
+			output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeepCost(town)) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeepCost(nation)));
+		if (town == null)
+			output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeep()) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeep()));
 		output.add(Colors.Gray + "Town upkeep is based on " + Colors.LightGreen + " the " + (TownySettings.isUpkeepByPlot() ? " number of plots" : " town level (num residents)."));
 
 		if (town != null) {
@@ -311,10 +326,10 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 			output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Resident: " + Colors.LightGreen + Double.toString(town.getTaxes()) + (town.isTaxPercentage()? "%" : "") + Colors.Gray + " | " + Colors.Green + "Plot: " + Colors.LightGreen + Double.toString(town.getPlotTax()));
 			output.add(Colors.Rose + "            " + Colors.Green + "Shop: " + Colors.LightGreen + Double.toString(town.getCommercialPlotTax()) + Colors.Gray + " | " + Colors.Green + "Embassy: " + Colors.LightGreen + Double.toString(town.getEmbassyPlotTax()));
-			
+
 			if (nation != null) {
 				output.add(Colors.Yellow + "Nation [" + TownyFormatter.getFormattedName(nation) + "]");
-				output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Town: " + Colors.LightGreen + Double.toString(nation.getTaxes()) + Colors.Gray + " | " + Colors.Green + "Neutrality: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationNeutralityCost()));
+				output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Town: " + Colors.LightGreen + Double.toString(nation.getTaxes()) + Colors.Gray + " | " + Colors.Green + "Peace: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationNeutralityCost()));
 			}
 		}
 		return output;

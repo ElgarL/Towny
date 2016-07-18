@@ -38,7 +38,7 @@ public enum PermissionNodes {
 		TOWNY_COMMAND_NATION_SET_TAG("towny.command.nation.set.tag"),
 
 	TOWNY_COMMAND_NATION_TOGGLE("towny.command.nation.toggle.*"),
-		TOWNY_COMMAND_NATION_TOGGLE_NEUTRAL("towny.command.nation.toggle.neutral"),
+	TOWNY_COMMAND_NATION_TOGGLE_NEUTRAL("towny.command.nation.toggle.neutral"),
 	
 	TOWNY_COMMAND_NATION_ALLY("towny.command.nation.ally"),
 	TOWNY_COMMAND_NATION_ENEMY("towny.command.nation.enemy"),
@@ -76,8 +76,10 @@ public enum PermissionNodes {
 			TOWNY_COMMAND_TOWN_SET_PLOTPRICE("towny.command.town.set.plotprice"),
 			TOWNY_COMMAND_TOWN_SET_NAME("towny.command.town.set.name"),
 			TOWNY_COMMAND_TOWN_SET_TAG("towny.command.town.set.tag"),
+			TOWNY_COMMAND_TOWN_SET_JAIL("towny.command.town.set.jail"),
 		
 		TOWNY_COMMAND_TOWN_BUY("towny.command.town.buy"),
+		TOWNY_COMMAND_TOWN_JAIL("towny.command.town.jail"),
 		
 		TOWNY_COMMAND_TOWN_TOGGLE("towny.command.town.toggle.*"),
 			TOWNY_COMMAND_TOWN_TOGGLE_PVP("towny.command.town.toggle.pvp"),
@@ -87,6 +89,7 @@ public enum PermissionNodes {
 			TOWNY_COMMAND_TOWN_TOGGLE_MOBS("towny.command.town.toggle.mobs"),
 			TOWNY_COMMAND_TOWN_TOGGLE_TAXPERCENT("towny.command.town.toggle.taxpercent"),
 			TOWNY_COMMAND_TOWN_TOGGLE_OPEN("towny.command.town.toggle.open"),
+			TOWNY_COMMAND_TOWN_TOGGLE_JAIL("towny.command.town.toggle.jail"),
 		
 		
 		TOWNY_COMMAND_TOWN_MAYOR("towny.command.town.mayor"),
@@ -113,6 +116,7 @@ public enum PermissionNodes {
 		TOWNY_COMMAND_PLOT_NOTFORSALE("towny.command.plot.notforsale"),
 		TOWNY_COMMAND_PLOT_FORSALE("towny.command.plot.forsale"),
 		TOWNY_COMMAND_PLOT_PERM("towny.command.plot.perm"),
+		TOWNY_COMMAND_PLOT_PERM_HUD("towny.command.plot.perm.hud"),
 		
 		TOWNY_COMMAND_PLOT_TOGGLE("towny.command.plot.toggle.*"),
 			TOWNY_COMMAND_PLOT_TOGGLE_PVP("towny.command.plot.toggle.pvp"),
@@ -129,6 +133,8 @@ public enum PermissionNodes {
 			TOWNY_COMMAND_PLOT_SET_ARENA("towny.command.plot.set.arena"),
 			TOWNY_COMMAND_PLOT_SET_WILDS("towny.command.plot.set.wilds"),
 			TOWNY_COMMAND_PLOT_SET_SPLEEF("towny.command.plot.set.spleef"),
+			TOWNY_COMMAND_PLOT_SET_INN("towny.command.plot.set.inn"),
+			TOWNY_COMMAND_PLOT_SET_JAIL("towny.command.plot.set.jail"),
 		
 		TOWNY_COMMAND_PLOT_CLEAR("towny.command.plot.clear"),
 	
@@ -137,6 +143,7 @@ public enum PermissionNodes {
 	 */
 	TOWNY_COMMAND_RESIDENT_LIST("towny.command.resident.list"),
 	TOWNY_COMMAND_RESIDENT_TAX("towny.command.resident.tax"),
+	TOWNY_COMMAND_RESIDENT_JAIL("towny.command.resident.jail"),
 	TOWNY_COMMAND_RESIDENT_SET("towny.command.resident.set.*"),
 		TOWNY_COMMAND_RESIDENT_SET_PERM("towny.command.resident.set.perm"),
 		TOWNY_COMMAND_RESIDENT_SET_MODE("towny.command.resident.set.mode"),
@@ -201,6 +208,7 @@ public enum PermissionNodes {
 	TOWNY_COMMAND_TOWNY_UNIVERSE("towny.command.towny.universe"),
 	TOWNY_COMMAND_TOWNY_VERSION("towny.command.towny.version"),
 	TOWNY_COMMAND_TOWNY_WAR("towny.command.towny.war"),
+	TOWNY_COMMAND_TOWNY_WAR_HUD("towny.command.towny.war.hud"),
 	TOWNY_COMMAND_TOWNY_SPY("towny.command.towny.spy"),
 	
 	/*
@@ -307,6 +315,7 @@ public enum PermissionNodes {
 	TOWNY_DEFAULT_MODES("towny_default_modes"),
 	TOWNY_MAX_PLOTS("towny_maxplots"), 
 	TOWNY_MAX_OUTPOSTS("towny_maxoutposts");
+	
 
 	private String value;
 
