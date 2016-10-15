@@ -27,6 +27,7 @@ import com.palmergames.bukkit.towny.object.TownyObject;
 import com.palmergames.bukkit.towny.object.TownyPermission.ActionType;
 import com.palmergames.bukkit.towny.object.TownyPermission.PermLevel;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
+import com.palmergames.bukkit.towny.object.TownyUpkeepModifier;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.bukkit.towny.permissions.PermissionNodes;
 import com.palmergames.bukkit.towny.war.flagwar.TownyWarConfig;
@@ -1468,7 +1469,7 @@ public class TownySettings {
 		} else
 			multiplier = 1.0;
 
-		return getTownUpkeep() * multiplier;
+		return (getTownUpkeep() * multiplier)+TownyUpkeepModifier.getTownUpkeepModifier(town);
 	}
 
 	public static double getTownUpkeep() {
@@ -1500,7 +1501,7 @@ public class TownySettings {
 		else
 			multiplier = 1.0;
 
-		return getNationUpkeep() * multiplier;
+		return (getNationUpkeep() * multiplier) + TownyUpkeepModifier.getNationUpkeepModifier(nation);
 	}
 
 	public static String getFlatFileBackupType() {
