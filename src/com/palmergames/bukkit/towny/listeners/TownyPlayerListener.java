@@ -498,7 +498,7 @@ public class TownyPlayerListener implements Listener {
 		/*
 		 * Abort if we havn't really moved
 		 */
-		if (event.getFrom().getBlockX() == event.getTo().getBlockX() && event.getFrom().getBlockZ() == event.getTo().getBlockZ() && event.getFrom().getBlockY() == event.getTo().getBlockY()) {
+		if (event.getFrom() == event.getTo()) {
 			return;
 		}
 
