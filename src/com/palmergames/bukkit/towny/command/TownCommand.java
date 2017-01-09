@@ -48,7 +48,7 @@ import static com.palmergames.bukkit.towny.object.TownyObservableType.TOWN_REMOV
 public class TownCommand extends BaseCommand implements CommandExecutor {
 
 	private static Towny plugin;
-	private static final List<String> output = new ArrayList<String>();
+	public static final List<String> output = new ArrayList<String>();
 
 	static {
 		output.add(ChatTools.formatTitle("/town"));
