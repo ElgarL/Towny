@@ -1173,7 +1173,7 @@ public enum ConfigNodes {
 	WAR_WARZONE_EDITABLE_MATERIALS(
 			"war.warzone.editable_materials",
 			"tnt,fence,ladder,wood_door,iron_door,fire",
-			"# List of materaials that can be modified in a warzone.",
+			"# List of materials that can be modified in a warzone.",
 			"# '*' = Allow all materials.",
 			"# Prepend a '-' in front of a material to remove it. Used in conjunction with when you use '*'.",
 			"# Eg: '*,-chest,-furnace'"),
