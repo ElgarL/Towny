@@ -77,8 +77,7 @@ public class PlayerCache {
 		} else
 			return false;
 	}
-
-
+	
 	public boolean getCachePermission(Integer id, byte data, ActionType action) throws NullPointerException {
 
 		switch (action) {
@@ -156,8 +155,7 @@ public class PlayerCache {
 			/*
 			 * We have cached permissions for this block type so just push updated data.
 			 */
-			blockMap.get(id).put(data, value);
-			
+			blockMap.get(id).put(data, value);		
 			
 		}
 	}

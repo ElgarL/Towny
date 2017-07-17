@@ -24,7 +24,7 @@ public class TownyWorld extends TownyObject {
 			isUsingPlotManagementMayorDelete = true,
 			isUsingPlotManagementRevert = true,
 			isUsingPlotManagementWildRevert = true;
-	private Long plotManagementRevertSpeed, plotManagementWildRevertDelay;
+	private Long plotManagementWildRevertDelay;
 	private List<String> unclaimedZoneIgnoreBlockMaterials = null;
 	private List<String> plotManagementDeleteIds = null;
 	private List<String> plotManagementMayorDelete = null;
@@ -59,7 +59,10 @@ public class TownyWorld extends TownyObject {
 
 		setUsingPlotManagementDelete(TownySettings.isUsingPlotManagementDelete());
 		setUsingPlotManagementRevert(TownySettings.isUsingPlotManagementRevert());
-		setPlotManagementRevertSpeed(TownySettings.getPlotManagementSpeed());
+		/*
+		 * No longer used - Never was used. Sadly not configurable per-world based on how the timer runs.
+		 */
+//		setPlotManagementRevertSpeed(TownySettings.getPlotManagementSpeed());
 		setUsingPlotManagementWildRevert(TownySettings.isUsingPlotManagementWildRegen());
 		setPlotManagementWildRevertDelay(TownySettings.getPlotManagementWildRegenDelay());
 
@@ -400,15 +403,18 @@ public class TownyWorld extends TownyObject {
 	}
 
 	public List<String> getPlotManagementIgnoreIds() {
-
+		
 		if (plotManagementIgnoreIds == null)
 			return TownySettings.getPlotManagementIgnoreIds();
 		else
 			return plotManagementIgnoreIds;
 	}
 
-	public boolean isPlotManagementIgnoreIds(String id) {
+	public boolean isPlotManagementIgnoreIds(String id, Byte data) {
 
+		if (getPlotManagementIgnoreIds().contains(id + ":" + Byte.toString(data)))
+			return true;
+		
 		return getPlotManagementIgnoreIds().contains(id);
 	}
 
@@ -434,21 +440,24 @@ public class TownyWorld extends TownyObject {
 		this.isUsingPlotManagementWildRevert = isUsingPlotManagementWildRevert;
 	}
 
-	/**
-	 * @return the plotManagementRevertSpeed
+	/*
+	 * No longer used - Never was used. Sadly not configurable per-world based on how the timer runs.
 	 */
-	public long getPlotManagementRevertSpeed() {
-
-		return plotManagementRevertSpeed;
-	}
-
-	/**
-	 * @param plotManagementRevertSpeed the plotManagementRevertSpeed to set
-	 */
-	public void setPlotManagementRevertSpeed(long plotManagementRevertSpeed) {
-
-		this.plotManagementRevertSpeed = plotManagementRevertSpeed;
-	}
+//	/**
+//	 * @return the plotManagementRevertSpeed
+//	 */
+//	public long getPlotManagementRevertSpeed() {
+//
+//		return plotManagementRevertSpeed;
+//	}
+//
+//	/**
+//	 * @param plotManagementRevertSpeed the plotManagementRevertSpeed to set
+//	 */
+//	public void setPlotManagementRevertSpeed(long plotManagementRevertSpeed) {
+//
+//		this.plotManagementRevertSpeed = plotManagementRevertSpeed;
+//	}
 
 	/**
 	 * @return the plotManagementWildRevertDelay

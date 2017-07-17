@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -289,7 +290,13 @@ public class TownyMessaging {
 		TownyLogger.log.info(ChatTools.stripColour("[Global Message] " + line));
 		for (Player player : BukkitTools.getOnlinePlayers()) {
 			if (player != null)
-				player.sendMessage(line);
+				try {
+					if (TownyUniverse.getDataSource().getWorld(player.getLocation().getWorld().getName()).isUsingTowny())
+						player.sendMessage(line);
+				} catch (NotRegisteredException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 
@@ -369,6 +376,20 @@ public class TownyMessaging {
 	}
 
 	/**
+	 * Send a message to All online residents of a town and log
+	 * with the [townname] prefixed to the beginning
+	 * 
+	 * @param town
+	 * @param line
+	 */
+	public static void sendPrefixedTownMessage(Town town, String line) {
+
+		TownyLogger.log.info(ChatTools.stripColour("[Town Msg] " + town.getName() + ": " + line));
+		for (Player player : TownyUniverse.getOnlinePlayers(town))
+			player.sendMessage(String.format(TownySettings.getLangString("default_town_prefix"), town.getName()) + line);
+	}
+
+	/**
 	 * Send a message to All online residents of a nation and log
 	 * 
 	 * @param nation
@@ -395,6 +416,20 @@ public class TownyMessaging {
 		TownyLogger.log.info(ChatTools.stripColour("[Nation Msg] " + nation.getName() + ": " + line));
 		for (Player player : TownyUniverse.getOnlinePlayers(nation))
 			player.sendMessage(line);
+	}
+
+	/**
+	 * Send a message to All online residents of a nation and log
+	 * with the [nationname] prefixed to the beginning
+	 * 
+	 * @param nation
+	 * @param line
+	 */
+	public static void sendPrefixedNationMessage(Nation nation, String line) {
+
+		TownyLogger.log.info(ChatTools.stripColour("[Nation Msg] " + nation.getName() + ": " + line));
+		for (Player player : TownyUniverse.getOnlinePlayers(nation))
+			player.sendMessage(String.format(TownySettings.getLangString("default_nation_prefix"), nation.getName()) + line);
 	}
 
 	/**
@@ -448,5 +483,56 @@ public class TownyMessaging {
 		for (Resident resident : town.getResidents())
 			if (BukkitTools.isOnline(resident.getName()))
 				sendMessage(resident,msg);
+	}
+	
+	/**
+	 * Send a message to all residents in the nation with the required mode
+	 * 
+	 * @param nation
+	 * @param msg
+	 * @param modeRequired
+	 */
+	public static void sendMessageToMode(Nation nation, String msg, String modeRequired) {
+
+		for (Resident resident : nation.getResidents())
+			if (BukkitTools.isOnline(resident.getName()))
+				sendMessage(resident,msg);
+	}
+	
+	/**
+	 * Send a Title and Subtitle to a resident
+	 * 
+	 * @param resident
+	 * @param title
+	 * @param subtitle
+	 * @throws TownyException
+	 */
+	public static void sendTitleMessageToResident(Resident resident, String title, String subtitle) throws TownyException {
+		Player player = TownyUniverse.getPlayer(resident);
+		player.sendTitle(title, subtitle, 10, 70, 10);
+	}
+	
+	/**
+	 * Send a Title and Subtitle to a town
+	 * 
+	 * @param town
+	 * @param title
+	 * @param subtitle
+	 */
+	public static void sendTitleMessageToTown(Town town, String title, String subtitle) {
+		for (Player player : TownyUniverse.getOnlinePlayers(town))
+			player.sendTitle(title, subtitle, 10, 70, 10);
+	}
+
+	/**
+	 * Send a Title and Subtitle to a nation
+	 * 
+	 * @param nation
+	 * @param title
+	 * @param subtitle
+	 */
+	public static void sendTitleMessageToNation(Nation nation, String title, String subtitle) {
+		for (Player player : TownyUniverse.getOnlinePlayers(nation))
+			player.sendTitle(title, subtitle, 10, 70, 10);
 	}
 }

@@ -44,6 +44,9 @@ public class SQL_Schema {
 				+ "`usingPlotManagementMayorDelete` bool NOT NULL DEFAULT '0',"
 				+ "`plotManagementMayorDelete` mediumtext NOT NULL,"
 				+ "`usingPlotManagementRevert` bool NOT NULL DEFAULT '0',"
+				/*
+				 * No longer used - Never was used. Sadly not configurable per-world based on how the timer runs.
+				 */
 				+ "`plotManagementRevertSpeed` long NOT NULL,"
 				+ "`plotManagementIgnoreIds` mediumtext NOT NULL,"
 				+ "`usingPlotManagementWildRegen` bool NOT NULL DEFAULT '0',"
@@ -99,6 +102,8 @@ public class SQL_Schema {
 				//+ "`townBlocks` mediumtext NOT NULL,"
 				+ "`spawn` mediumtext NOT NULL,"
 				+ "`outpostSpawns` mediumtext DEFAULT NULL,"
+				+ "`jailSpawns` mediumtext DEFAULT NULL,"
+				+ "`outlaws` mediumtext DEFAULT NULL,"
 				+ "PRIMARY KEY (`name`)"
 				+ ")";
 	}
@@ -113,6 +118,9 @@ public class SQL_Schema {
 				+ "`lastOnline` BIGINT NOT NULL,"
 				+ "`registered` BIGINT NOT NULL,"
 				+ "`isNPC` bool NOT NULL DEFAULT '0',"
+				+ "`isJailed` bool NOT NULL DEFAULT '0',"
+				+ "`JailSpawn` mediumint,"
+				+ "`JailTown` mediumtext,"
 				+ "`title` mediumtext,"
 				+ "`surname` mediumtext,"
 				+ "`protectionStatus` mediumtext,"
@@ -243,8 +251,9 @@ public class SQL_Schema {
 		String town_update;
 
 		try {
-			town_update = "ALTER TABLE `" + db_name + "`.`" + tb_prefix + "TOWNS` ADD COLUMN "
-						+ "`admindisabledpvp` bool NOT NULL DEFAULT '0'";
+			town_update = "ALTER TABLE `" + db_name + "`.`" + tb_prefix + "TOWNS` "
+						//+ "ADD COLUMN `jailSpawns` mediumtext DEFAULT NULL,"
+						+ "ADD COLUMN `outlaws` mediumtext DEFAULT NULL";
 			
 			Statement s = cntx.createStatement();
 			s.executeUpdate(town_update);
@@ -266,8 +275,9 @@ public class SQL_Schema {
 		try {
 
 			resident_update = "ALTER TABLE `" + db_name + "`.`" + tb_prefix + "RESIDENTS` "
-						+ "ADD COLUMN `town-ranks` mediumtext,"
-						+ "ADD COLUMN `nation-ranks` mediumtext";
+						+ "ADD COLUMN `isJailed` bool NOT NULL DEFAULT '0',"
+						+ "ADD COLUMN `JailSpawn` mediumint,"
+						+ "ADD COLUMN `JailTown` mediumtext";
 			
 			Statement s = cntx.createStatement();
 			s.executeUpdate(resident_update);
@@ -359,11 +369,6 @@ public class SQL_Schema {
 
 			if (ee.getErrorCode() != 1060)
 				TownyMessaging.sendErrorMsg("Error updating table TOWNS :" + ee.getMessage());
-
 		}
-		
-		
-		
 	}
-
 }

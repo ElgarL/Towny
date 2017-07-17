@@ -117,7 +117,10 @@ public class TownySQLSource extends TownyFlatFileSource {
 		} else if (this.type.equals("mysql")) {
 
 			this.driver = "com.mysql.jdbc.Driver";
-			this.dsn = ("jdbc:mysql://" + hostname + ":" + port + "/" + db_name + "?useUnicode=true&characterEncoding=utf-8");
+			if (TownySettings.getSQLUsingSSL())
+				this.dsn = ("jdbc:mysql://" + hostname + ":" + port + "/" + db_name + "?useUnicode=true&characterEncoding=utf-8");
+			else 
+				this.dsn = ("jdbc:mysql://" + hostname + ":" + port + "/" + db_name + "?verifyServerCertificate=false&useSSL=false&useUnicode=true&characterEncoding=utf-8");
 			username = TownySettings.getSQLUsername();
 			password = TownySettings.getSQLPassword();
 
@@ -654,6 +657,21 @@ public class TownySQLSource extends TownyFlatFileSource {
 					e.printStackTrace();
 				}
 				try {
+					resident.setJailed(rs.getBoolean("isJailed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				try {
+					resident.setJailSpawn(rs.getInt("JailSpawn"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				try {
+					resident.setJailTown(rs.getString("JailTown"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				try {
 					resident.setTitle(rs.getString("title"));
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -760,6 +778,7 @@ public class TownySQLSource extends TownyFlatFileSource {
 						}
 					}
 				}
+				
 				town.setMayor(getResident(rs.getString("mayor")));
 				// line = rs.getString("assistants");
 				// if (line != null) {
@@ -843,34 +862,73 @@ public class TownySQLSource extends TownyFlatFileSource {
 						} catch (NumberFormatException e) {
 						} catch (NotRegisteredException e) {
 						} catch (NullPointerException e) {
-						}
-					// Load outpost spawns
-					line = rs.getString("outpostSpawns");
-					if (line != null) {
-						String[] outposts = line.split(";");
-						for (String spawn : outposts) {
-							search = (line.contains("#")) ? "#" : ",";
-							tokens = spawn.split(search);
-							if (tokens.length >= 4)
-								try {
-									World world = plugin.getServerWorld(tokens[0]);
-									double x = Double.parseDouble(tokens[1]);
-									double y = Double.parseDouble(tokens[2]);
-									double z = Double.parseDouble(tokens[3]);
+					}
+				}
+				// Load outpost spawns
+				line = rs.getString("outpostSpawns");
+				if (line != null) {
+					String[] outposts = line.split(";");
+					for (String spawn : outposts) {
+						search = (line.contains("#")) ? "#" : ",";
+						tokens = spawn.split(search);
+						if (tokens.length >= 4)
+							try {
+								World world = plugin.getServerWorld(tokens[0]);
+								double x = Double.parseDouble(tokens[1]);
+								double y = Double.parseDouble(tokens[2]);
+								double z = Double.parseDouble(tokens[3]);
 
-									Location loc = new Location(world, x, y, z);
-									if (tokens.length == 6) {
-										loc.setPitch(Float.parseFloat(tokens[4]));
-										loc.setYaw(Float.parseFloat(tokens[5]));
-									}
-									town.forceAddOutpostSpawn(loc);
-								} catch (NumberFormatException e) {
-								} catch (NotRegisteredException e) {
-								} catch (NullPointerException e) {
+								Location loc = new Location(world, x, y, z);
+								if (tokens.length == 6) {
+									loc.setPitch(Float.parseFloat(tokens[4]));
+									loc.setYaw(Float.parseFloat(tokens[5]));
 								}
+								town.forceAddOutpostSpawn(loc);
+							} catch (NumberFormatException e) {
+							} catch (NotRegisteredException e) {
+							} catch (NullPointerException e) {
+							}
+					}
+				}
+				// Load jail spawns
+				line = rs.getString("jailSpawns");
+				if (line != null) {
+					String[] jails = line.split(";");
+					for (String spawn : jails) {
+						search = (line.contains("#")) ? "#" : ",";
+						tokens = spawn.split(search);
+						if (tokens.length >= 4)
+							try {
+								World world = plugin.getServerWorld(tokens[0]);
+								double x = Double.parseDouble(tokens[1]);
+								double y = Double.parseDouble(tokens[2]);
+								double z = Double.parseDouble(tokens[3]);
+
+								Location loc = new Location(world, x, y, z);
+								if (tokens.length == 6) {
+									loc.setPitch(Float.parseFloat(tokens[4]));
+									loc.setYaw(Float.parseFloat(tokens[5]));
+								}
+								town.forceAddJailSpawn(loc);
+							} catch (NumberFormatException e) {
+							} catch (NotRegisteredException e) {
+							} catch (NullPointerException e) {
+							}
+					}
+				}
+				line = rs.getString("outlaws");
+				if (line != null) {
+					search = (line.contains("#")) ? "#" : ",";
+					tokens = line.split(search);
+					for (String token : tokens) {
+						if (!token.isEmpty()) {
+							Resident resident = getResident(token);
+							if (resident != null)
+								town.addOutlaw(resident);
 						}
 					}
 				}
+
 
 				/*
 				 * Attempt these for older databases.
@@ -1202,12 +1260,15 @@ public class TownySQLSource extends TownyFlatFileSource {
 					} catch (Exception e) {
 					}
 
-				resultLong = rs.getLong("PlotManagementRevertSpeed");
-				if (resultLong != null)
-					try {
-						world.setPlotManagementRevertSpeed(resultLong);
-					} catch (Exception e) {
-					}
+				/*
+				 * No longer used - Never was used. Sadly not configurable per-world based on how the timer runs.
+				 */
+//				resultLong = rs.getLong("PlotManagementRevertSpeed");
+////				if (resultLong != null)
+////					try {
+////						world.setPlotManagementRevertSpeed(resultLong);
+////					} catch (Exception e) {
+////					}
 
 				line = rs.getString("plotManagementIgnoreIds");
 				if (line != null)
@@ -1384,7 +1445,7 @@ public class TownySQLSource extends TownyFlatFileSource {
 				s.close();
 
 			} catch (SQLException e) {
-				TownyMessaging.sendErrorMsg("Loading Error: Exception while reading TownBlocks ");
+				TownyMessaging.sendErrorMsg("Loading Error: Exception while reading TownBlock: " + townBlock + " at line: " + line + " in the sql database");
 				e.printStackTrace();
 				return false;
 			}
@@ -1406,6 +1467,9 @@ public class TownySQLSource extends TownyFlatFileSource {
 			res_hm.put("lastOnline", resident.getLastOnline());
 			res_hm.put("registered", resident.getRegistered());
 			res_hm.put("isNPC", resident.isNPC());
+			res_hm.put("isJailed", resident.isJailed());
+			res_hm.put("JailSpawn", resident.getJailSpawn());
+			res_hm.put("JailTown", resident.getJailTown());
 			res_hm.put("title", resident.getTitle());
 			res_hm.put("surname", resident.getSurname());
 			res_hm.put("town", resident.hasTown() ? resident.getTown().getName() : "");
@@ -1432,6 +1496,7 @@ public class TownySQLSource extends TownyFlatFileSource {
 			HashMap<String, Object> twn_hm = new HashMap<String, Object>();
 			twn_hm.put("name", town.getName());
 			twn_hm.put("residents", StringMgmt.join(town.getResidents(), "#"));
+			twn_hm.put("outlaws", StringMgmt.join(town.getOutlaws(), "#"));
 			twn_hm.put("mayor", town.hasMayor() ? town.getMayor().getName() : "");
 			twn_hm.put("nation", town.hasNation() ? town.getNation().getName() : "");
 			twn_hm.put("assistants", StringMgmt.join(town.getAssistants(), "#"));
@@ -1457,13 +1522,18 @@ public class TownySQLSource extends TownyFlatFileSource {
 			twn_hm.put("homeblock", town.hasHomeBlock() ? town.getHomeBlock().getWorld().getName() + "#" + Integer.toString(town.getHomeBlock().getX()) + "#" + Integer.toString(town.getHomeBlock().getZ()) : "");
 			twn_hm.put("spawn", town.hasSpawn() ? town.getSpawn().getWorld().getName() + "#" + Double.toString(town.getSpawn().getX()) + "#" + Double.toString(town.getSpawn().getY()) + "#" + Double.toString(town.getSpawn().getZ()) + "#" + Float.toString(town.getSpawn().getPitch()) + "#" + Float.toString(town.getSpawn().getYaw()) : "");
 			// Outpost Spawns
-			if (town.hasOutpostSpawn()) {
-				String outpostArray = "";
+			String outpostArray = "";
+			if (town.hasOutpostSpawn()) 
 				for (Location spawn : new ArrayList<Location>(town.getAllOutpostSpawns())) {
 					outpostArray += (spawn.getWorld().getName() + "#" + Double.toString(spawn.getX()) + "#" + Double.toString(spawn.getY()) + "#" + Double.toString(spawn.getZ()) + "#" + Float.toString(spawn.getPitch()) + "#" + Float.toString(spawn.getYaw()) + ";");
 				}
-				twn_hm.put("outpostSpawns", outpostArray);
-			}
+			twn_hm.put("outpostSpawns", outpostArray);			// Jail Spawns
+			String jailArray = "";
+			if (town.hasJailSpawn()) 		
+				for (Location spawn : new ArrayList<Location>(town.getAllJailSpawns())) {
+					jailArray += (spawn.getWorld().getName() + "#" + Double.toString(spawn.getX()) + "#" + Double.toString(spawn.getY()) + "#" + Double.toString(spawn.getZ()) + "#" + Float.toString(spawn.getPitch()) + "#" + Float.toString(spawn.getYaw()) + ";");
+				}				
+			twn_hm.put("jailSpawns", jailArray);
 
 			UpdateDB("TOWNS", twn_hm, Arrays.asList("name"));
 			return true;
@@ -1565,7 +1635,7 @@ public class TownySQLSource extends TownyFlatFileSource {
 			// Using PlotManagement Revert
 			nat_hm.put("usingPlotManagementRevert", world.isUsingPlotManagementRevert());
 			// Using PlotManagement Revert Speed
-			nat_hm.put("plotManagementRevertSpeed", world.getPlotManagementRevertSpeed());
+			//nat_hm.put("plotManagementRevertSpeed", world.getPlotManagementRevertSpeed());
 
 			// Plot Management Ignore Ids
 			if (world.getPlotManagementIgnoreIds() != null)

@@ -1,6 +1,7 @@
 package com.palmergames.bukkit.towny.utils;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import com.palmergames.bukkit.towny.Towny;
@@ -20,6 +21,7 @@ import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.bukkit.towny.object.PlayerCache.TownBlockStatus;
 import com.palmergames.bukkit.towny.object.TownyPermission.ActionType;
 import com.palmergames.bukkit.towny.regen.TownyRegenAPI;
+import com.palmergames.bukkit.util.BukkitTools;
 
 /**
  * Groups all the cache status and permissions in one place.
@@ -79,7 +81,7 @@ public class PlayerCacheUtil {
 
 			PlayerCache cache = plugin.getCache(player);
 			cache.updateCoord(worldCoord);
-			
+						
 			TownyMessaging.sendDebugMsg("New Cache Created and updated!");
 
 			TownyMessaging.sendDebugMsg("New Cache permissions for " + blockId + ":" + action.toString() + ":" + status.name() + " = " + cache.getCachePermission(blockId, data, action));
@@ -87,6 +89,58 @@ public class PlayerCacheUtil {
 		}
 	}
 
+	/**
+	 * Returns player cached permission for BUILD, DESTROY, SWITCH or ITEM_USE
+	 * at this location for the specified item id.
+	 * 
+	 * Generates the cache if it doesn't exist.
+	 * 
+	 * @param player
+	 * @param location
+	 * @param material
+	 * @param action
+	 * @return true if the player has permission.
+	 */
+	public static boolean getCachePermission(Player player, Location location, Material material, ActionType action) {
+
+		WorldCoord worldCoord;
+		Integer blockId = null;
+		byte data = 0;
+		getIDfromMaterial(material, blockId);
+
+		try {
+			worldCoord = new WorldCoord(player.getWorld().getName(), Coord.parseCoord(location));
+			PlayerCache cache = plugin.getCache(player);
+			cache.updateCoord(worldCoord);
+
+			TownyMessaging.sendDebugMsg("Cache permissions for " + action.toString() + " : " + cache.getCachePermission(blockId, data, action));
+			return cache.getCachePermission(blockId, data, action); // Throws NullPointerException if the cache is empty
+
+		} catch (NullPointerException e) {
+			// New or old cache permission was null, update it
+
+			worldCoord = new WorldCoord(player.getWorld().getName(), Coord.parseCoord(location));
+
+			TownBlockStatus status = cacheStatus(player, worldCoord, getTownBlockStatus(player, worldCoord));
+			triggerCacheCreate(player, location, worldCoord, status, blockId, data, action);
+
+			PlayerCache cache = plugin.getCache(player);
+			cache.updateCoord(worldCoord);
+			
+			TownyMessaging.sendDebugMsg("New Cache Created and updated!");
+
+			TownyMessaging.sendDebugMsg("New Cache permissions for " + blockId + ":" + action.toString() + ":" + status.name() + " = " + cache.getCachePermission(blockId, data, action));
+			return cache.getCachePermission(blockId, data, action);
+		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	private static void getIDfromMaterial(Material material, Integer id) {
+		id = material.getId();
+	    return;	     
+	}
+
+		
 	/**
 	 * Generate a new cache for this player/action.
 	 * 
@@ -285,7 +339,7 @@ public class PlayerCacheUtil {
 
 					}
 				}
-				//If this town is not in a nation and we are set to non neutral status during war.
+				//If this town is not in a nation and we are set to non peaceful/neutral status during war.
 				if (!TownySettings.isWarTimeTownsNeutral() && !town.hasNation())
 					return TownBlockStatus.WARZONE;
 			}
@@ -434,6 +488,11 @@ public class PlayerCacheUtil {
 						} catch (NotRegisteredException e) {
 						}
 
+					} else if (townBlock.getType() == TownBlockType.FARM && (action.equals(ActionType.BUILD) || action.equals(ActionType.DESTROY))) {		
+						
+						if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+							return true;
+						
 					} else {
 						return true;
 					}
@@ -454,6 +513,11 @@ public class PlayerCacheUtil {
 						} catch (NotRegisteredException e) {
 						}
 
+					} else if (townBlock.getType() == TownBlockType.FARM && (action == ActionType.BUILD || action == ActionType.DESTROY)) {		
+						
+						if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+							return true;
+						
 					} else {
 						return true;
 					}
@@ -475,6 +539,11 @@ public class PlayerCacheUtil {
 						} catch (NotRegisteredException e) {
 						}
 
+					} else if (townBlock.getType() == TownBlockType.FARM && (action == ActionType.BUILD || action == ActionType.DESTROY)) {		
+						
+						if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+							return true;
+						
 					} else {
 						return true;
 					}
@@ -509,6 +578,11 @@ public class PlayerCacheUtil {
 					} catch (NotRegisteredException e) {
 					}
 
+				} else if (townBlock.getType() == TownBlockType.FARM && (action == ActionType.BUILD || action == ActionType.DESTROY)) {		
+					
+					if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+						return true;
+					
 				} else {
 					return true;
 				}
@@ -539,6 +613,11 @@ public class PlayerCacheUtil {
 					} catch (NotRegisteredException e) {
 					}
 
+				} else if (townBlock.getType() == TownBlockType.FARM && (action == ActionType.BUILD || action == ActionType.DESTROY)) {		
+					
+					if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+						return true;
+					
 				} else {
 					return true;
 				}
@@ -566,6 +645,11 @@ public class PlayerCacheUtil {
 					} catch (NotRegisteredException e) {
 					}
 
+				} else if (townBlock.getType() == TownBlockType.FARM && (action == ActionType.BUILD || action == ActionType.DESTROY)) {
+					
+					if (TownySettings.getFarmPlotBlocks().contains(BukkitTools.getMaterial(blockId).name()))
+						return true;
+					
 				} else {
 					return true;
 				}

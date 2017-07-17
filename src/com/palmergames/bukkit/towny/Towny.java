@@ -3,6 +3,7 @@ package com.palmergames.bukkit.towny;
 import ca.xshade.bukkit.questioner.Questioner;
 import ca.xshade.questionmanager.Option;
 import ca.xshade.questionmanager.Question;
+
 import com.earth2me.essentials.Essentials;
 import com.nijiko.permissions.PermissionHandler;
 import com.palmergames.bukkit.metrics.Metrics;
@@ -23,6 +24,8 @@ import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.util.FileMgmt;
 import com.palmergames.util.JavaUtil;
 import com.palmergames.util.StringMgmt;
+import com.palmergames.bukkit.towny.huds.*;
+
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -32,8 +35,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Towny Plugin for Bukkit
@@ -62,6 +63,7 @@ public class Towny extends JavaPlugin {
 	private final TownyWarBlockListener townyWarBlockListener = new TownyWarBlockListener(this);
 	private final TownyWarCustomListener townyWarCustomListener = new TownyWarCustomListener(this);
 	private final TownyWarEntityListener townyWarEntityListener = new TownyWarEntityListener(this);
+	private final HUDManager HUDManager = new HUDManager(this);
 
 	private TownyUniverse townyUniverse;
 
@@ -71,6 +73,13 @@ public class Towny extends JavaPlugin {
 	private boolean citizens2 = false;
 
 	private boolean error = false;
+	
+	public static Towny plugin;
+	
+	public Towny() {
+		
+		plugin = this;
+	}
 
 	@Override
 	public void onEnable() {
@@ -203,38 +212,12 @@ public class Towny extends JavaPlugin {
 
 	public boolean load() {
 
-		Pattern pattern = Pattern.compile("-b(\\d*?)jnks", Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(getServer().getVersion());
-
-		// TownyEconomyHandler.setupEconomy();
-
 		if (!townyUniverse.loadSettings()) {
 			setError(true);
-			// getServer().getPluginManager().disablePlugin(this);
 			return false;
 		}
 
 		setupLogger();
-
-		int bukkitVer = TownySettings.getMinBukkitVersion();
-
-		if (!matcher.find() || matcher.group(1) == null) {
-
-			TownyLogger.log.warning("[Towny Warning] Unable to read CraftBukkit Version.");
-			TownyLogger.log.warning("[Towny Warning] Towny requires version " + bukkitVer + " or higher.");
-			TownyLogger.log.warning("[Towny Warning] Check your CraftBukkit version as we do not test on custom/old builds.");
-
-		} else {
-
-			int curBuild = Integer.parseInt(matcher.group(1));
-
-			if (curBuild < bukkitVer) {
-
-				TownyLogger.log.severe("[Towny Warning] CraftBukkit Version (" + curBuild + ") is outdated! ");
-				TownyLogger.log.severe("[Towny Warning] Towny requires version " + bukkitVer + " or higher.");
-
-			}
-		}
 
 		checkPlugins();
 
@@ -341,9 +324,9 @@ public class Towny extends JavaPlugin {
 		 * Test for Citizens2 so we can avoid removing their NPC's
 		 */
 		test = getServer().getPluginManager().getPlugin("Citizens");
-		if (test != null) {
-			citizens2 = test.getDescription().getVersion().startsWith("2");
-		}
+		if (test != null) 
+			if (getServer().getPluginManager().getPlugin("Citizens").isEnabled())
+				citizens2 = test.getDescription().getVersion().startsWith("2");
 
 		if (using.size() > 0)
 			TownyLogger.log.info("[Towny] Using: " + StringMgmt.join(using, ", "));
@@ -357,6 +340,9 @@ public class Towny extends JavaPlugin {
 			// Have War Events get launched before regular events.
 			pluginManager.registerEvents(townyWarBlockListener, this);
 			pluginManager.registerEvents(townyWarEntityListener, this);
+			
+			// Huds
+			pluginManager.registerEvents(HUDManager, this);
 
 			// Manage player deaths and death payments
 			pluginManager.registerEvents(entityMonitorListener, this);
@@ -788,5 +774,13 @@ public class Towny extends JavaPlugin {
 	public TownyWarEntityListener getTownyWarEntityListener() {
 	
 		return townyWarEntityListener;
+	}
+	
+	/**
+	 * @return the HUDManager
+	 */
+	public HUDManager getHUDManager() {
+		
+		return HUDManager;
 	}
 }

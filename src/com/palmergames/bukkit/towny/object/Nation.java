@@ -221,7 +221,7 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 				addAlly(nation);
 				if (!hasEnemy(nation) && hasAlly(nation))
 					return true;
-			} else if (type.equalsIgnoreCase("neutral")) {
+			} else if (type.equalsIgnoreCase("peaceful") || type.equalsIgnoreCase("neutral")) {
 				removeEnemy(nation);
 				removeAlly(nation);
 				if (!hasEnemy(nation) && !hasAlly(nation))
@@ -495,5 +495,14 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 	@Override
 	public String getEconomyName() {
 		return StringMgmt.trimMaxLength(Nation.ECONOMY_ACCOUNT_PREFIX + getName(), 32);
+	}
+
+	@Override
+	public List<Resident> getOutlaws() {
+
+		List<Resident> out = new ArrayList<Resident>();
+		for (Town town : getTowns())
+			out.addAll(town.getOutlaws());
+		return out;
 	}
 }

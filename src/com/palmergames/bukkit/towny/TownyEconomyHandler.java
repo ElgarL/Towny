@@ -122,7 +122,7 @@ public class TownyEconomyHandler {
 				 * Flag as using Vault hooks
 				 */
 				vaultEconomy = vaultEcoProvider.getProvider();
-				setVersion(String.format("%s v%s", "Vault", vaultEcoProvider.getPlugin().getDescription().getVersion()));
+				setVersion(String.format("%s %s", vaultEcoProvider.getProvider().getName(), "via Vault" ));
 				Type = EcoType.VAULT;
 				return true;
 			}
@@ -160,6 +160,33 @@ public class TownyEconomyHandler {
 		}
 
 		return null;
+	}
+	
+	/**
+	 * Check if account exists
+	 * 
+	 * @param accountName
+	 * @return
+	 */
+	public static boolean hasEconomyAccount(String accountName) {
+
+		switch (Type) {
+
+		case ICO5:
+			return iConomy.hasAccount(accountName);
+
+		case REGISTER:
+			return Methods.getMethod().hasAccount(accountName);
+			
+		case VAULT:
+			return vaultEconomy.hasAccount(accountName);
+			
+		default:
+			break;
+
+		}
+
+		return false;
 	}
 
 	/**

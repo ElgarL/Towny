@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,6 +17,7 @@ import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.event.PlotClearEvent;
+import com.palmergames.bukkit.towny.event.TownBlockSettingsChangedEvent;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
@@ -71,7 +73,15 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			System.out.println("[PLAYER_COMMAND] " + player.getName() + ": /" + commandLabel + " " + StringMgmt.join(args));
+			try {
+				if (!TownyUniverse.getDataSource().getWorld(player.getWorld().getName()).isUsingTowny()) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_set_use_towny_off"));
+					return false;
+				}
+			} catch (NotRegisteredException e) {
+				// World not registered				
+			}
+
 			if (args == null) {
 				for (String line : output)
 					player.sendMessage(line);
@@ -80,7 +90,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 					return parsePlotCommand(player, args);
 				} catch (TownyException x) {
 					// No permisisons
-					TownyMessaging.sendErrorMsg(player, x.getMessage());
+					 x.getMessage();
 				}
 			}
 
@@ -135,7 +145,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 									cost += worldCoord.getTownBlock().getPlotPrice();
 								else {
 									if (!worldCoord.getTownBlock().getTown().isMayor(resident)) // ||
-																								// worldCoord.getTownBlock().getTown().hasAssistant(resident))
+										// worldCoord.getTownBlock().getTown().hasAssistant(resident))
 										selection.remove(worldCoord);
 								}
 							} catch (NotRegisteredException e) {
@@ -250,8 +260,16 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 					if (!TownyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_PLOT_PERM.getNode()))
 						throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
 
-					TownBlock townBlock = new WorldCoord(world, Coord.parseCoord(player)).getTownBlock();
-					TownyMessaging.sendMessage(player, TownyFormatter.getStatus(townBlock));
+					if (split.length > 1 && split[1].equalsIgnoreCase("hud"))
+						if (plugin.isPermissions() && TownyUniverse.getPermissionSource().has(player, PermissionNodes.TOWNY_COMMAND_PLOT_PERM_HUD.getNode())) {
+							plugin.getHUDManager().togglePermHuD(player);
+						} else {
+							TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_err_command_disable"));
+						}
+					else {
+						TownBlock townBlock = new WorldCoord(world, Coord.parseCoord(player)).getTownBlock();
+						TownyMessaging.sendMessage(player, TownyFormatter.getStatus(townBlock));
+					}
 
 				} else if (split[0].equalsIgnoreCase("toggle")) {
 
@@ -262,20 +280,34 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 					TownBlock townBlock = new WorldCoord(world, Coord.parseCoord(player)).getTownBlock();
 					// Test we are allowed to work on this plot
 					plotTestOwner(resident, townBlock); // ignore the return as
-														// we are only checking
-														// for an exception
+					// we are only checking
+					// for an exception
 
 					plotToggle(player, new WorldCoord(world, Coord.parseCoord(player)).getTownBlock(), StringMgmt.remFirstArg(split));
 
 				} else if (split[0].equalsIgnoreCase("set")) {
 
 					split = StringMgmt.remFirstArg(split);
+					
+					if (split.length == 0 || split[0].equalsIgnoreCase("?")) {
 
-					if (split.length > 0) {
-						
+						player.sendMessage(ChatTools.formatTitle("/... set perm"));
+						player.sendMessage(ChatTools.formatCommand("Level", "[resident/ally/outsider]", "", ""));
+						player.sendMessage(ChatTools.formatCommand("Type", "[build/destroy/switch/itemuse]", "", ""));
+						player.sendMessage(ChatTools.formatCommand("", "set perm", "[on/off]", "Toggle all permissions"));
+						player.sendMessage(ChatTools.formatCommand("", "set perm", "[level/type] [on/off]", ""));
+						player.sendMessage(ChatTools.formatCommand("", "set perm", "[level] [type] [on/off]", ""));
+						player.sendMessage(ChatTools.formatCommand("", "set perm", "reset", ""));
+						player.sendMessage(ChatTools.formatCommand("Eg", "/plot set perm", "ally off", ""));
+						player.sendMessage(ChatTools.formatCommand("Eg", "/plot set perm", "friend build on", ""));
+						player.sendMessage(String.format(TownySettings.getLangString("plot_perms"), "'friend'", "'resident'"));
+						player.sendMessage(TownySettings.getLangString("plot_perms_1"));
+
+					} else if (split.length > 0) {
+
 						if (!TownyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_PLOT_SET.getNode(split[0].toLowerCase())))
 							throw new TownyException(TownySettings.getLangString("msg_err_command_disable"));
-						
+
 						if (split[0].equalsIgnoreCase("perm")) {
 
 							// Set plot level permissions (if the plot owner) or
@@ -291,16 +323,15 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 							setTownBlockPermissions(player, owner, townBlock, StringMgmt.remFirstArg(split));
 
 							return true;
-							
+
 						} else if (split[0].equalsIgnoreCase("name")) {
-							
+
 							TownBlock townBlock = new WorldCoord(world, Coord.parseCoord(player)).getTownBlock();
 							// Test we are allowed to work on this plot
 							plotTestOwner(resident, townBlock);
-							
 							if (split.length == 1) {
 								townBlock.setName("");
-								TownyMessaging.sendMsg(player, String.format("Plot name removed"));
+								TownyMessaging.sendMsg(player, String.format(TownySettings.getLangString("msg_plot_name_removed")));
 								TownyUniverse.getDataSource().saveTownBlock(townBlock);
 								return true;
 							}
@@ -308,31 +339,31 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 							// Test if the plot name contains invalid characters.
 							if (!NameValidation.isBlacklistName(split[1])) {								
 								townBlock.setName(StringMgmt.join(StringMgmt.remFirstArg(split), ""));
-							
-     							//townBlock.setChanged(true);
-							    TownyUniverse.getDataSource().saveTownBlock(townBlock);
-							
-							    TownyMessaging.sendMsg(player, String.format("Plot name set to [%s]", townBlock.getName()));
-							    
+
+								//townBlock.setChanged(true);
+								TownyUniverse.getDataSource().saveTownBlock(townBlock);
+
+								TownyMessaging.sendMsg(player, String.format(TownySettings.getLangString("msg_plot_name_set_to"), townBlock.getName()));
+
 							} else {
-								
+
 								TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_invalid_name"));
-								
+
 							}
 							return true;
 						} 
 
 						WorldCoord worldCoord = new WorldCoord(world, Coord.parseCoord(player));
-						
+
 						setPlotType(resident, worldCoord, split[0]);
-						
+
 						player.sendMessage(String.format(TownySettings.getLangString("msg_plot_set_type"), split[0]));
 
 					} else {
 
 						player.sendMessage(ChatTools.formatCommand("", "/plot set", "name", ""));
 						player.sendMessage(ChatTools.formatCommand("", "/plot set", "reset", ""));
-						player.sendMessage(ChatTools.formatCommand("", "/plot set", "shop|embassy|arena|wilds|spleef", ""));
+						player.sendMessage(ChatTools.formatCommand("", "/plot set", "shop|embassy|arena|wilds|spleef|inn|jail|farm", ""));
 						player.sendMessage(ChatTools.formatCommand("", "/plot set perm", "?", ""));
 					}
 
@@ -368,7 +399,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 						// Raise an event for the claim
 						BukkitTools.getPluginManager().callEvent(new PlotClearEvent(townBlock));
-						
+
 					} else {
 						// Shouldn't ever reach here as a null townBlock should
 						// be caught already in WorldCoord.
@@ -387,11 +418,11 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 		return true;
 	}
-	
+
 	public static void setTownBlockPermissions(Player player, TownBlockOwner townBlockOwner, TownBlock townBlock, String[] split) {
 
 		if (split.length == 0 || split[0].equalsIgnoreCase("?")) {
-			
+
 			player.sendMessage(ChatTools.formatTitle("/... set perm"));
 			player.sendMessage(ChatTools.formatCommand("Level", "[friend/ally/outsider]", "", ""));
 			player.sendMessage(ChatTools.formatCommand("Type", "[build/destroy/switch/itemuse]", "", ""));
@@ -400,17 +431,17 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 			player.sendMessage(ChatTools.formatCommand("", "set perm", "[level] [type] [on/off]", ""));
 			player.sendMessage(ChatTools.formatCommand("", "set perm", "reset", ""));
 			player.sendMessage(ChatTools.formatCommand("Eg", "/plot set perm", "friend build on", ""));
-			player.sendMessage(String.format(TownySettings.getLangString("plot_perms"), "'friend'", ""));
+			player.sendMessage(String.format(TownySettings.getLangString("plot_perms"), "'friend'", "'resident'"));
 			player.sendMessage(TownySettings.getLangString("plot_perms_1"));
-			
+
 		} else {
-			
+
 			TownyPermission perm = townBlock.getPermissions();
 
 			if (split.length == 1) {
-				
+
 				if (split[0].equalsIgnoreCase("reset")) {
-					
+
 					// reset this townBlock permissions (by town/resident)
 					townBlock.setType(townBlock.getType());
 					TownyUniverse.getDataSource().saveTownBlock(townBlock);
@@ -422,11 +453,11 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 					// Reset all caches as this can affect everyone.
 					plugin.resetCache();
-					
+
 					return;
-					
+
 				} else {
-					
+
 					// Set all perms to On or Off
 					// '/plot set perm off'
 
@@ -440,17 +471,29 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 								"allySwitch", "allyItemUse" })
 							perm.set(element, b);
 					} catch (Exception e) {
-						// invalid entry
+						TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_plot_set_perm_syntax_error"));
+						return;
 					}
 
 				}
-				
+
 			} else if (split.length == 2) {
-				
+				if ((!split[0].equalsIgnoreCase("resident") 
+						&& !split[0].equalsIgnoreCase("friend") 
+						&& !split[0].equalsIgnoreCase("ally") 
+						&& !split[0].equalsIgnoreCase("outsider")) 
+						&& !split[0].equalsIgnoreCase("build")
+						&& !split[0].equalsIgnoreCase("destroy")
+						&& !split[0].equalsIgnoreCase("switch")
+						&& !split[0].equalsIgnoreCase("itemuse")) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_plot_set_perm_syntax_error"));
+					return;
+				}
+
 				try {
-					
+
 					boolean b = plugin.parseOnOff(split[1]);
-					
+
 					if (split[0].equalsIgnoreCase("friend")) {
 						perm.residentBuild = b;
 						perm.residentDestroy = b;
@@ -485,31 +528,50 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 					}
 
 				} catch (Exception e) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_plot_set_perm_syntax_error"));
+					return;
 				}
-				
+
 			} else if (split.length == 3) {
-				
+				if ((!split[0].equalsIgnoreCase("resident") 
+						&& !split[0].equalsIgnoreCase("friend") 
+						&& !split[0].equalsIgnoreCase("ally") 
+						&& !split[0].equalsIgnoreCase("outsider")) 
+						|| (!split[1].equalsIgnoreCase("build")
+						&& !split[1].equalsIgnoreCase("destroy")
+						&& !split[1].equalsIgnoreCase("switch")
+						&& !split[1].equalsIgnoreCase("itemuse"))) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_plot_set_perm_syntax_error"));
+					return;
+				}
+
 				// reset the friend to resident so the perm settings don't fail
 				if (split[0].equalsIgnoreCase("friend"))
 					split[0] = "resident";
-				
+
 				try {
 					boolean b = plugin.parseOnOff(split[2]);
 					String s = "";
 					s = split[0] + split[1];
 					perm.set(s, b);
 				} catch (Exception e) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_plot_set_perm_syntax_error"));
+					return;
 				}
-				
+
 			}
-			
+
 			townBlock.setChanged(true);
 			TownyUniverse.getDataSource().saveTownBlock(townBlock);
-			
+
 			TownyMessaging.sendMsg(player, TownySettings.getLangString("msg_set_perms"));
 			TownyMessaging.sendMessage(player, (Colors.Green + " Perm: " + ((townBlockOwner instanceof Resident) ? perm.getColourString().replace("f", "r") : perm.getColourString())));
 			TownyMessaging.sendMessage(player, Colors.Green + "PvP: " + ((perm.pvp) ? Colors.Red + "ON" : Colors.LightGreen + "OFF") + Colors.Green + "  Explosions: " + ((perm.explosion) ? Colors.Red + "ON" : Colors.LightGreen + "OFF") + Colors.Green + "  Firespread: " + ((perm.fire) ? Colors.Red + "ON" : Colors.LightGreen + "OFF") + Colors.Green + "  Mob Spawns: " + ((perm.mobs) ? Colors.Red + "ON" : Colors.LightGreen + "OFF"));
 
+			//Change settings event
+			TownBlockSettingsChangedEvent event = new TownBlockSettingsChangedEvent(townBlock);
+			Bukkit.getServer().getPluginManager().callEvent(event);
+			
 			// Reset all caches as this can affect everyone.
 			plugin.resetCache();
 		}
@@ -524,24 +586,42 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 	 * @throws TownyException
 	 */
 	public void setPlotType(Resident resident, WorldCoord worldCoord, String type) throws TownyException {
-
+		
 		if (resident.hasTown())
 			try {
 				TownBlock townBlock = worldCoord.getTownBlock();
 
 				// Test we are allowed to work on this plot
 				plotTestOwner(resident, townBlock); // ignore the return as we
-													// are only checking for an
-													// exception
+				// are only checking for an
+				// exception
 
-				townBlock.setType(type);
-				
-				//townBlock.setChanged(true);
+				townBlock.setType(type);		
+				Town town = resident.getTown();
+				if (townBlock.isJail())			
+					town.addJailSpawn(TownyUniverse.getPlayer(resident).getLocation());				
+
 				TownyUniverse.getDataSource().saveTownBlock(townBlock);
 
 			} catch (NotRegisteredException e) {
 				throw new TownyException(TownySettings.getLangString("msg_err_not_part_town"));
 			}
+		else if (!resident.hasTown()) {
+			
+			TownBlock townBlock = worldCoord.getTownBlock();
+
+			// Test we are allowed to work on this plot
+			plotTestOwner(resident, townBlock); // ignore the return as we
+												// are only checking for an
+												// exception
+			townBlock.setType(type);		
+			Town town = resident.getTown();
+			if (townBlock.isJail())			
+				town.addJailSpawn(TownyUniverse.getPlayer(resident).getLocation());				
+			
+			TownyUniverse.getDataSource().saveTownBlock(townBlock);
+		
+		}
 		else
 			throw new TownyException(TownySettings.getLangString("msg_err_must_belong_town"));
 	}
@@ -562,21 +642,21 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 				// Test we are allowed to work on this plot
 				plotTestOwner(resident, townBlock); // ignore the return as we
-													// are only checking for an
-													// exception
+				// are only checking for an
+				// exception
 				if (forSale > 1000000 ) {
-					TownyUniverse.getPlayer(resident).sendMessage("Plot price too expensive.");
-				    
+					TownyUniverse.getPlayer(resident).sendMessage(TownySettings.getLangString("msg_plot_price_too_expensive"));
+
 				} else {
-				    townBlock.setPlotPrice(forSale);
+					townBlock.setPlotPrice(forSale);
 
-				    if (forSale != -1)
-				    	TownyMessaging.sendTownMessage(townBlock.getTown(), TownySettings.getPlotForSaleMsg(resident.getName(), worldCoord));
-				    else
-				    	TownyUniverse.getPlayer(resident).sendMessage(TownySettings.getLangString("msg_err_plot_nfs"));
+					if (forSale != -1)
+						TownyMessaging.sendTownMessage(townBlock.getTown(), TownySettings.getPlotForSaleMsg(resident.getName(), worldCoord));
+					else
+						TownyUniverse.getPlayer(resident).sendMessage(TownySettings.getLangString("msg_err_plot_nfs"));
 
-				    // Save this townblock so the for sale status is remembered.
-				    TownyUniverse.getDataSource().saveTownBlock(townBlock);
+					// Save this townblock so the for sale status is remembered.
+					TownyUniverse.getDataSource().saveTownBlock(townBlock);
 				}
 
 			} catch (NotRegisteredException e) {
@@ -640,6 +720,10 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 				townBlock.setChanged(true);
 
+				//Change settings event
+				TownBlockSettingsChangedEvent event = new TownBlockSettingsChangedEvent(townBlock);
+				Bukkit.getServer().getPluginManager().callEvent(event);
+
 			} catch (Exception e) {
 				TownyMessaging.sendErrorMsg(player, e.getMessage());
 			}
@@ -700,16 +784,22 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 
 		Player player = BukkitTools.getPlayer(resident.getName());
 		boolean isAdmin = TownyUniverse.getPermissionSource().isTownyAdmin(player);
-		
+
 		if (townBlock.hasResident()) {
 			
-			Resident owner = townBlock.getResident();
-			boolean isSameTown = (resident.hasTown()) ? resident.getTown() == owner.getTown() : false;
-			
+			Resident owner = townBlock.getResident();		
+			if ((!owner.hasTown() 
+					&& (player.hasPermission(PermissionNodes.TOWNY_COMMAND_PLOT_ASMAYOR.getNode())))
+					&& (townBlock.getTown() == resident.getTown()))				
+					return owner;
+					
+			boolean isSameTown = (resident.hasTown()) ? resident.getTown() == owner.getTown() : false;			
+
 			if ((resident == owner)
 					|| ((isSameTown) && (player.hasPermission(PermissionNodes.TOWNY_COMMAND_PLOT_ASMAYOR.getNode())))
+					|| ((townBlock.getTown() == resident.getTown())) && (player.hasPermission(PermissionNodes.TOWNY_COMMAND_PLOT_ASMAYOR.getNode()))
 					|| isAdmin) {
-				
+
 				return owner;
 			}
 
@@ -717,7 +807,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 			throw new TownyException(TownySettings.getLangString("msg_area_not_own"));
 
 		} else {
-			
+
 			Town owner = townBlock.getTown();
 			boolean isSameTown = (resident.hasTown()) ? resident.getTown() == owner : false;
 
@@ -731,7 +821,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 		}
 
 	}
-	
+
 	/**
 	 * Overridden method custom for this command set.
 	 * 
@@ -754,7 +844,7 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 				if (resident.getName().toLowerCase().startsWith(lastArg)) {
 					output.add(resident.getName());
 				}
-			
+
 			}
 
 		}

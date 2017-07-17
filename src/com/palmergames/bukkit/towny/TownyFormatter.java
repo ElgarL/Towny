@@ -61,6 +61,18 @@ public class TownyFormatter {
 
 	}
 
+	public static List<String> getFormattedOutlaws(Town town) {
+
+		List<String> out = new ArrayList<String>();
+
+		String[] residents = getFormattedNames(town.getOutlaws().toArray(new Resident[0]));
+
+		out.addAll(ChatTools.listArr(residents, Colors.Green + "Outlaws: " + Colors.White + " "));
+
+		return out;
+
+	}
+	
 	public static List<String> getFormattedResidents(String prefix, List<Resident> residentList) {
 
 		return ChatTools.listArr(getFormattedNames(residentList), String.format(residentListPrefixFormat, prefix, residentList.size(), Colors.Green, Colors.LightGreen, Colors.White));
@@ -159,10 +171,16 @@ public class TownyFormatter {
 			if (!resident.getNationRanks().isEmpty())
 				out.add(Colors.Green + "Nation Ranks: " + Colors.LightGreen + StringMgmt.join(resident.getNationRanks(), ","));
 		}
-
+		
+		// Jailed: yes if they are jailed.
+		if (resident.isJailed()){
+			out.add(Colors.Green + "Jailed: Yes" + " in Town: " + resident.getJailTown());
+		}
+		
 		// Friends [12]: James, Carry, Mason
 		List<Resident> friends = resident.getFriends();
 		out.addAll(getFormattedResidents("Friends", friends));
+		
 
 		return out;
 	}
@@ -319,9 +337,9 @@ public class TownyFormatter {
 		if (nation.isNeutral()) {
 			if (line.length() > 0)
 				line += Colors.Gray + " | ";
-			line += Colors.LightGray + "Neutral";
+			line += Colors.LightGray + "Peaceful";
 		}
-		// Bank: 534 coins | Neutral
+		// Bank: 534 coins | Peaceful
 		if (line.length() > 0)
 			out.add(line);
 
