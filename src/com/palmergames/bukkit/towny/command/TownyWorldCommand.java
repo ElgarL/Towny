@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -15,6 +16,7 @@ import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.event.TownBlockSettingsChangedEvent;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
@@ -68,7 +70,6 @@ public class TownyWorldCommand extends BaseCommand implements CommandExecutor {
 
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			System.out.println("[PLAYER_COMMAND] " + player.getName() + ": /" + commandLabel + " " + StringMgmt.join(args));
 		}
 		parseWorldCommand(sender, args);
 		/*
@@ -364,9 +365,12 @@ public class TownyWorldCommand extends BaseCommand implements CommandExecutor {
 					TownyMessaging.sendErrorMsg(msg);
 				return;
 			}
-
+			
 			TownyUniverse.getDataSource().saveWorld(Globalworld);
-
+			
+			//Change settings event
+			TownBlockSettingsChangedEvent event = new TownBlockSettingsChangedEvent(Globalworld);
+			Bukkit.getServer().getPluginManager().callEvent(event);
 		}
 
 	}

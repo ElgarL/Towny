@@ -1,5 +1,29 @@
 package com.palmergames.bukkit.towny;
 
+import com.palmergames.bukkit.config.CommentedConfiguration;
+import com.palmergames.bukkit.config.ConfigNodes;
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
+import com.palmergames.bukkit.towny.object.Nation;
+import com.palmergames.bukkit.towny.object.Resident;
+import com.palmergames.bukkit.towny.object.Town;
+import com.palmergames.bukkit.towny.object.TownBlock;
+import com.palmergames.bukkit.towny.object.TownBlockOwner;
+import com.palmergames.bukkit.towny.object.TownyObject;
+import com.palmergames.bukkit.towny.object.TownyPermission.ActionType;
+import com.palmergames.bukkit.towny.object.TownyPermission.PermLevel;
+import com.palmergames.bukkit.towny.object.TownyUniverse;
+import com.palmergames.bukkit.towny.object.WorldCoord;
+import com.palmergames.bukkit.towny.permissions.PermissionNodes;
+import com.palmergames.bukkit.towny.war.flagwar.TownyWarConfig;
+import com.palmergames.bukkit.util.BukkitTools;
+import com.palmergames.bukkit.util.NameValidation;
+import com.palmergames.util.FileMgmt;
+import com.palmergames.util.StringMgmt;
+import com.palmergames.util.TimeTools;
+import org.bukkit.Material;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.Player;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,28 +38,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bukkit.Material;
-
-import com.palmergames.bukkit.config.CommentedConfiguration;
-import com.palmergames.bukkit.config.ConfigNodes;
-import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
-import com.palmergames.bukkit.towny.object.Nation;
-import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.object.Town;
-import com.palmergames.bukkit.towny.object.TownBlockOwner;
-import com.palmergames.bukkit.towny.object.TownyObject;
-import com.palmergames.bukkit.towny.object.TownyPermission.ActionType;
-import com.palmergames.bukkit.towny.object.TownyPermission.PermLevel;
-import com.palmergames.bukkit.towny.object.TownyUniverse;
-import com.palmergames.bukkit.towny.object.WorldCoord;
-import com.palmergames.bukkit.towny.permissions.PermissionNodes;
-import com.palmergames.bukkit.towny.war.flagwar.TownyWarConfig;
-import com.palmergames.bukkit.util.BukkitTools;
-import com.palmergames.bukkit.util.NameValidation;
-import com.palmergames.util.FileMgmt;
-import com.palmergames.util.StringMgmt;
-import com.palmergames.util.TimeTools;
-
 public class TownySettings {
 
 	// Town Level
@@ -45,11 +47,11 @@ public class TownySettings {
 
 	// Nation Level
 	public enum NationLevel {
-		NAME_PREFIX, NAME_POSTFIX, CAPITAL_PREFIX, CAPITAL_POSTFIX, KING_PREFIX, KING_POSTFIX, TOWN_BLOCK_LIMIT_BONUS, UPKEEP_MULTIPLIER
+		NAME_PREFIX, NAME_POSTFIX, CAPITAL_PREFIX, CAPITAL_POSTFIX, KING_PREFIX, KING_POSTFIX, TOWN_BLOCK_LIMIT_BONUS, UPKEEP_MULTIPLIER, NATION_TOWN_UPKEEP_MULTIPLIER
 	};
 
 	// private static Pattern namePattern = null;
-	private static CommentedConfiguration config, newConfig, language;
+	private static CommentedConfiguration config, newConfig, language, newLanguage;
 
 	private static final SortedMap<Integer, Map<TownySettings.TownLevel, Object>> configTownLevel = Collections.synchronizedSortedMap(new TreeMap<Integer, Map<TownySettings.TownLevel, Object>>(Collections.reverseOrder()));
 	private static final SortedMap<Integer, Map<TownySettings.NationLevel, Object>> configNationLevel = Collections.synchronizedSortedMap(new TreeMap<Integer, Map<TownySettings.NationLevel, Object>>(Collections.reverseOrder()));
@@ -62,11 +64,11 @@ public class TownySettings {
 		m.put(TownySettings.TownLevel.MAYOR_PREFIX, mayorPrefix);
 		m.put(TownySettings.TownLevel.MAYOR_POSTFIX, mayorPostfix);
 		m.put(TownySettings.TownLevel.TOWN_BLOCK_LIMIT, townBlockLimit);
-		m.put(TownySettings.TownLevel.UPKEEP_MULTIPLIER, townUpkeepMultiplier);
+		m.put(TownySettings.TownLevel.UPKEEP_MULTIPLIER, townUpkeepMultiplier);				
 		configTownLevel.put(numResidents, m);
 	}
 
-	public static void newNationLevel(int numResidents, String namePrefix, String namePostfix, String capitalPrefix, String capitalPostfix, String kingPrefix, String kingPostfix, int townBlockLimitBonus, double nationUpkeepMultiplier) {
+	public static void newNationLevel(int numResidents, String namePrefix, String namePostfix, String capitalPrefix, String capitalPostfix, String kingPrefix, String kingPostfix, int townBlockLimitBonus, double nationUpkeepMultiplier, double nationTownUpkeepMultiplier) {
 
 		ConcurrentHashMap<TownySettings.NationLevel, Object> m = new ConcurrentHashMap<TownySettings.NationLevel, Object>();
 		m.put(TownySettings.NationLevel.NAME_PREFIX, namePrefix);
@@ -77,6 +79,7 @@ public class TownySettings {
 		m.put(TownySettings.NationLevel.KING_POSTFIX, kingPostfix);
 		m.put(TownySettings.NationLevel.TOWN_BLOCK_LIMIT_BONUS, townBlockLimitBonus);
 		m.put(TownySettings.NationLevel.UPKEEP_MULTIPLIER, nationUpkeepMultiplier);
+		m.put(TownySettings.NationLevel.NATION_TOWN_UPKEEP_MULTIPLIER, nationTownUpkeepMultiplier);
 		configNationLevel.put(numResidents, m);
 	}
 
@@ -96,7 +99,15 @@ public class TownySettings {
 		List<Map<?, ?>> levels = config.getMapList("levels.town_level");
 		for (Map<?, ?> level : levels) {
 
-			newTownLevel((Integer) level.get("numResidents"), (String) level.get("namePrefix"), (String) level.get("namePostfix"), (String) level.get("mayorPrefix"), (String) level.get("mayorPostfix"), (Integer) level.get("townBlockLimit"), (Double) level.get("upkeepModifier"));
+			newTownLevel(
+					(Integer) level.get("numResidents"),
+					(String) level.get("namePrefix"),
+					(String) level.get("namePostfix"),
+					(String) level.get("mayorPrefix"),
+					(String) level.get("mayorPostfix"),
+					(Integer) level.get("townBlockLimit"),
+					(Double) level.get("upkeepModifier")
+					);
 
 		}
 	}
@@ -116,7 +127,18 @@ public class TownySettings {
 		List<Map<?, ?>> levels = config.getMapList("levels.nation_level");
 		for (Map<?, ?> level : levels) {
 
-			newNationLevel((Integer) level.get("numResidents"), (String) level.get("namePrefix"), (String) level.get("namePostfix"), (String) level.get("capitalPrefix"), (String) level.get("capitalPostfix"), (String) level.get("kingPrefix"), (String) level.get("kingPostfix"), (level.containsKey("townBlockLimitBonus") ? (Integer) level.get("townBlockLimitBonus") : 0), (Double) level.get("upkeepModifier"));
+			newNationLevel(
+					(Integer) level.get("numResidents"),
+					(String) level.get("namePrefix"),
+					(String) level.get("namePostfix"),
+					(String) level.get("capitalPrefix"),
+					(String) level.get("capitalPostfix"),
+					(String) level.get("kingPrefix"),
+					(String) level.get("kingPostfix"),
+					(level.containsKey("townBlockLimitBonus") ? (Integer) level.get("townBlockLimitBonus") : 0),
+					(Double) level.get("upkeepModifier"),
+					(level.containsKey("nationTownUpkeepModifier") ? (Double) level.get("nationTownUpkeepModifier") : 1.0)
+					);
 
 		}
 	}
@@ -203,14 +225,30 @@ public class TownySettings {
 
 		String res = getString(ConfigNodes.LANGUAGE.getRoot(), defaultRes);
 		String fullPath = filepath + FileMgmt.fileSeparator() + res;
-
 		File file = FileMgmt.unpackResourceFile(fullPath, res, defaultRes);
+		
 		if (file != null) {
-
 			// read the (language).yml into memory
 			language = new CommentedConfiguration(file);
 			language.load();
-
+			newLanguage = new CommentedConfiguration(file);
+			try {
+				newLanguage.loadFromString(FileMgmt.convertStreamToString("/" + res));
+			} catch (IOException e) {
+				TownyMessaging.sendMsg("Custom language file detected, not updating.");
+				return;
+			} catch (InvalidConfigurationException e) {
+				TownyMessaging.sendMsg("Invalid Configuration in language file detected.");
+			}
+			String resVersion = newLanguage.getString("version");			
+			String langVersion = TownySettings.getLangString("version");
+			
+			if (!langVersion.equalsIgnoreCase(resVersion)) {
+				language = newLanguage;
+				newLanguage = null;
+				TownyMessaging.sendMsg("Newer language file available, language file updated.");
+				FileMgmt.stringToFile(FileMgmt.convertStreamToString("/" + res), file);
+			}			
 		}
 	}
 
@@ -302,7 +340,7 @@ public class TownySettings {
 		return list;
 	}
 
-	private static List<String> getStrArr(ConfigNodes node) {
+	public static List<String> getStrArr(ConfigNodes node) {
 
 		String[] strArray = getString(node.getRoot().toLowerCase(), node.getDefault()).split(",");
 		List<String> list = new ArrayList<String>();
@@ -568,6 +606,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 10);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			level.put("numResidents", 10);
@@ -579,6 +618,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 20);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			level.put("numResidents", 20);
@@ -590,6 +630,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 40);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			level.put("numResidents", 30);
@@ -601,6 +642,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 60);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			level.put("numResidents", 40);
@@ -612,6 +654,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 100);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			level.put("numResidents", 60);
@@ -623,6 +666,7 @@ public class TownySettings {
 			level.put("kingPostfix", "");
 			level.put("townBlockLimitBonus", 140);
 			level.put("upkeepModifier", 1.0);
+			level.put("nationTownUpkeepModifier", 1.0);
 			levels.add(new HashMap<String, Object>(level));
 			level.clear();
 			newConfig.set(ConfigNodes.LEVELS_NATION_LEVEL.getRoot(), levels);
@@ -689,6 +733,60 @@ public class TownySettings {
 
 		return parseString(String.format(getLangString("MSG_WAR_SCORE"), town.getName(), n));
 	}
+	
+	//Need other languages Methods
+	public static String[] getWarTimeScoreNationEliminatedMsg(Town town, int n, Nation fallenNation) {
+
+		return parseString(String.format(getLangString("MSG_WAR_SCORE_NATION_ELIM"), town.getName(), n, fallenNation.getName()));
+	}
+	
+	public static String[] getWarTimeScoreTownEliminatedMsg(Town town, int n, Town fallenTown, int fallenTownBlocks) {
+
+		return parseString(String.format(getLangString("MSG_WAR_SCORE_TOWN_ELIM"), town.getName(), n, fallenTown.getName(), fallenTownBlocks));
+	}
+	
+	public static String[] getWarTimeScoreTownBlockEliminatedMsg(Town town, int n, TownBlock fallenTownBlock) {
+
+		String townBlockName = "";
+		try {
+			Town fallenTown = ((TownBlock)fallenTownBlock).getTown();
+			townBlockName = "[" + fallenTown.getName() + "](" + ((TownBlock)fallenTownBlock).getCoord().toString() + ")";
+		} catch (NotRegisteredException e) {
+			townBlockName = "(" + ((TownBlock)fallenTownBlock).getCoord().toString() + ")";
+		}
+		return parseString(String.format(getLangString("MSG_WAR_SCORE_TOWNBLOCK_ELIM"), town.getName(), n, townBlockName));
+	}
+	        
+	public static String[] getWarTimeScorePlayerKillMsg(Player attacker, Player dead, int n, Town attackingTown) {
+
+		return parseString(String.format(getLangString("MSG_WAR_SCORE_PLAYER_KILL"), attacker.getName(), dead.getName(), n, attackingTown.getName()));
+	}
+	
+	public static String[] getWarTimeScorePlayerKillMsg(Player attacker, Player dead, Player defender, int n, Town attackingTown) {
+
+		return parseString(String.format(getLangString("MSG_WAR_SCORE_PLAYER_KILL_DEFENDING"), attacker.getName(), dead.getName(), defender.getName(), n, attackingTown.getName()));
+	}
+	
+	public static String[] getWarTimeKingKilled(Nation kingsNation) {
+
+		return parseString(String.format(getLangString("MSG_WAR_KING_KILLED"), kingsNation.getName()));
+	}
+	
+	public static String[] getWarTimeMayorKilled(Town mayorsTown) {
+
+		return parseString(String.format(getLangString("MSG_WAR_MAYOR_KILLED"), mayorsTown.getName()));
+	}
+	
+	public static String[] getWarTimeWinningNationSpoilsMsg(Nation winningNation, String money)
+	{
+		return parseString(String.format(getLangString("MSG_WAR_WINNING_NATION_SPOILS"), winningNation.getName(), money));
+	}
+	
+	public static String[] getWarTimeWinningTownSpoilsMsg(Town winningTown, String money, int score)
+	{
+		return parseString(String.format(getLangString("MSG_WAR_WINNING_TOWN_SPOILS"), winningTown.getName(), money, score));
+	}
+	//Score Methods
 
 	public static String[] getCouldntPayTaxesMsg(TownyObject obj, String type) {
 
@@ -905,6 +1003,11 @@ public class TownySettings {
 
 		return getString(ConfigNodes.PLUGIN_DATABASE_PASSWORD);
 	}
+	
+	public static boolean getSQLUsingSSL() {
+
+		return getBoolean(ConfigNodes.PLUGIN_DATABASE_SSL);
+	}
 
 	public static int getMaxTownBlocks(Town town) {
 
@@ -957,37 +1060,9 @@ public class TownySettings {
 		return getBoolean(ConfigNodes.GTOWN_SETTINGS_FRIENDLY_FIRE);
 	}
 
-	public static boolean isTownCreationAdminOnly() {
-
-		return getBoolean(ConfigNodes.PERMS_TOWN_CREATION_ADMIN_ONLY);
-	}
-
-	public static boolean isNationCreationAdminOnly() {
-
-		return getBoolean(ConfigNodes.PERMS_NATION_CREATION_ADMIN_ONLY);
-	}
-
-	/*
-	 * public static boolean isUsingRegister() {
-	 * return getBoolean(ConfigNodes.PLUGIN_USING_REGISTER);
-	 * }
-	 * 
-	 * public static void setUsingRegister(boolean newSetting) {
-	 * setProperty(ConfigNodes.PLUGIN_USING_REGISTER.getRoot(), newSetting);
-	 * }
-	 * 
-	 * public static boolean isUsingIConomy() {
-	 * return getBoolean(ConfigNodes.PLUGIN_USING_ICONOMY);
-	 * }
-	 * 
-	 * public static void setUsingIConomy(boolean newSetting) {
-	 * setProperty(ConfigNodes.PLUGIN_USING_ICONOMY.getRoot(), newSetting);
-	 * }
-	 */
 	public static boolean isUsingEconomy() {
 
 		return getBoolean(ConfigNodes.PLUGIN_USING_ECONOMY);
-		// return (isUsingIConomy() || isUsingRegister());
 	}
 
 	public static boolean isFakeResident(String name) {
@@ -1048,6 +1123,11 @@ public class TownySettings {
 	public static boolean getShowTownNotifications() {
 
 		return getBoolean(ConfigNodes.GTOWN_SETTINGS_SHOW_TOWN_NOTIFICATIONS);
+	}
+
+	public static boolean getShowTownBoardOnLogin() {
+
+		return getBoolean(ConfigNodes.GTOWN_SETTINGS_DISPLAY_TOWNBOARD_ONLOGIN);
 	}
 
 	public static String getUnclaimedZoneName() {
@@ -1206,6 +1286,36 @@ public class TownySettings {
 		return getBoolean(ConfigNodes.TOWN_DEF_OPEN);
 	}
 
+	public static double getTownDefaultTax() {
+
+		return getDouble(ConfigNodes.TOWN_DEF_TAXES_TAX);
+	}
+
+	public static double getTownDefaultShopTax() {
+
+		return getDouble(ConfigNodes.TOWN_DEF_TAXES_SHOP_TAX);
+	}
+	
+	public static double getTownDefaultEmbassyTax() {
+
+		return getDouble(ConfigNodes.TOWN_DEF_TAXES_EMBASSY_TAX);
+	}
+	
+	public static double getTownDefaultPlotTax() {
+		
+		return getDouble(ConfigNodes.TOWN_DEF_TAXES_PLOT_TAX);		
+	}
+
+	public static boolean getTownDefaultTaxPercentage() {
+
+		return getBoolean(ConfigNodes.TOWN_DEF_TAXES_TAXPERCENTAGE);
+	}
+	
+	public static double getTownDefaultTaxMinimumTax() {
+		
+		return getDouble(ConfigNodes.TOWN_DEF_TAXES_MINIMUMTAX);
+	}
+	
 	public static boolean hasTownLimit() {
 
 		return getTownLimit() != 0;
@@ -1219,6 +1329,11 @@ public class TownySettings {
 	public static int getMaxPurchedBlocks() {
 
 		return getInt(ConfigNodes.TOWN_MAX_PURCHASED_BLOCKS);
+	}
+	
+	public static int getMaxClaimRadiusValue() {
+		
+		return getInt(ConfigNodes.TOWN_MAX_CLAIM_RADIUS_VALUE);
 	}
 
 	public static boolean isSellingBonusBlocks() {
@@ -1383,10 +1498,30 @@ public class TownySettings {
 
 		return getDouble(ConfigNodes.WAR_EVENT_BASE_SPOILS);
 	}
+	
+	public static boolean getOnlyAttackEdgesInWar() {
+		
+		return getBoolean(ConfigNodes.WAR_EVENT_ENEMY_ONLY_ATTACK_BORDER);
+	}
+	
+	public static boolean getPlotsHealableInWar() {
+		
+		return getBoolean(ConfigNodes.WAR_EVENT_PLOTS_HEALABLE);
+	}
+	
+	public static boolean getPlotsFireworkOnAttacked() {
+		
+		return getBoolean(ConfigNodes.WAR_EVENT_PLOTS_FIREWORK_ON_ATTACKED);
+	}
 
 	public static double getWartimeDeathPrice() {
 
 		return getDouble(ConfigNodes.WAR_EVENT_PRICE_DEATH);
+	}
+	
+	public static boolean getWarEventCostsTownblocks() {
+		
+		return getBoolean(ConfigNodes.WAR_EVENT_COSTS_TOWNBLOCKS);
 	}
 
 	public static boolean isChargingDeath() {
@@ -1420,6 +1555,41 @@ public class TownySettings {
 		return getDouble(ConfigNodes.ECO_PRICE_DEATH_NATION);
 	}
 	
+	public static boolean isEcoClosedEconomyEnabled() {
+		
+		return getBoolean(ConfigNodes.ECO_CLOSED_ECONOMY_ENABLED);
+	}
+	
+	public static boolean isJailingAttackingEnemies() {
+		
+		return getBoolean(ConfigNodes.JAIL_IS_JAILING_ATTACKING_ENEMIES);	
+	}
+	
+	public static boolean isJailingAttackingOutlaws() {
+		
+		return getBoolean(ConfigNodes.JAIL_IS_JAILING_ATTACKING_OUTLAWS);	
+	}
+
+	public static boolean JailAllowsEnderPearls() {
+		
+		return getBoolean(ConfigNodes.JAIL_JAIL_ALLOWS_ENDER_PEARLS);	
+	}
+	
+	public static boolean JailDeniesTownLeave() {
+		
+		return getBoolean(ConfigNodes.JAIL_JAIL_DENIES_TOWN_LEAVE);	
+	}	
+
+	public static boolean isAllowingBail() {
+		
+		return getBoolean(ConfigNodes.JAIL_BAIL_IS_ALLOWING_BAIL);	
+	}
+	
+	public static double getBailAmount() {
+		
+		return getDouble(ConfigNodes.JAIL_BAIL_BAIL_AMOUNT);
+	}
+
 	public static double getWartimeTownBlockLossPrice() {
 
 		return getDouble(ConfigNodes.WAR_EVENT_TOWN_BLOCK_LOSS_PRICE);
@@ -1468,7 +1638,20 @@ public class TownySettings {
 		} else
 			multiplier = 1.0;
 
-		return getTownUpkeep() * multiplier;
+		if (town.hasNation()) {
+			double nationMultiplier = 1.0;
+			try {
+				nationMultiplier = Double.valueOf(getNationLevel(town.getNation()).get(TownySettings.NationLevel.NATION_TOWN_UPKEEP_MULTIPLIER).toString());
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NotRegisteredException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return (getTownUpkeep() * multiplier) * nationMultiplier ;
+		} else 		
+			return getTownUpkeep() * multiplier ;
 	}
 
 	public static double getTownUpkeep() {
@@ -1625,6 +1808,11 @@ public class TownySettings {
 	public static boolean isTownRespawningInOtherWorlds() {
 
 		return getBoolean(ConfigNodes.GTOWN_SETTINGS_TOWN_RESPAWN_SAME_WORLD_ONLY);
+	}
+	
+	public static int getMaxResidentsPerTown() {
+		
+		return getInt(ConfigNodes.GTOWN_MAX_RESIDENTS_PER_TOWN);
 	}
 
 	public static boolean isTownyUpdating(String currentVersion) {
@@ -1986,6 +2174,11 @@ public class TownySettings {
 		return getString(ConfigNodes.FILTERS_REGEX_NAME_CHECK_REGEX);
 	}
 
+	public static String getStringCheckRegex() {
+
+		return getString(ConfigNodes.FILTERS_REGEX_STRING_CHECK_REGEX);
+	}
+
 	public static String getNameRemoveRegex() {
 
 		return getString(ConfigNodes.FILTERS_REGEX_NAME_REMOVE_REGEX);
@@ -2046,8 +2239,6 @@ public class TownySettings {
 		setProperty(ConfigNodes.ECO_BANK_NATION_ALLOW_WITHDRAWLS.getRoot(), newSetting);
 	}
 
-	// /////////////////////////////////////
-
 	@Deprecated
 	public static boolean isValidRegionName(String name) {
 
@@ -2066,4 +2257,71 @@ public class TownySettings {
 		return NameValidation.filterName(input);
 	}
 
+	public static boolean isDisallowOneWayAlliance() {
+		
+		return getBoolean(ConfigNodes.WAR_DISALLOW_ONE_WAY_ALLIANCE);
+	}
+	
+	public static int getNumResidentsJoinNation() {
+		return getInt(ConfigNodes.GTOWN_SETTINGS_REQUIRED_NUMBER_RESIDENTS_JOIN_NATION);
+	}
+	
+	public static int getNumResidentsCreateNation() {
+		return getInt(ConfigNodes.GTOWN_SETTINGS_REQUIRED_NUMBER_RESIDENTS_CREATE_NATION);
+	}
+	
+	public static boolean isRefundNationDisbandLowResidents() {
+		return getBoolean(ConfigNodes.GTOWN_SETTINGS_REFUND_DISBAND_LOW_RESIDENTS);
+	}
+	
+	public static double getNationRequiresProximity() {
+		return getDouble(ConfigNodes.GTOWN_SETTINGS_NATION_REQUIRES_PROXIMITY);
+	}
+	
+	public static List<String> getFarmPlotBlocks() {
+		return getStrArr(ConfigNodes.GTOWN_FARM_PLOT_ALLOW_BLOCKS);
+	}
+	
+	public static List<String> getFarmAnimals() {
+		return getStrArr(ConfigNodes.GTOWN_FARM_ANIMALS);
+	}
+	
+	public static String getListPageMsg(int page, int total) {
+		 
+	    return parseString(String.format(getLangString("LIST_PAGE"), String.valueOf(page), String.valueOf(total)))[0];
+	}
+	 
+	public static String getListNotEnoughPagesMsg(int max) {
+	 
+	    return parseString(String.format(getLangString("LIST_ERR_NOT_ENOUGH_PAGES"), String.valueOf(max)))[0];
+	}
+	
+	public static String[] getWarAPlayerHasNoTownMsg() {
+		return parseString(String.format(getLangString("msg_war_a_player_has_no_town"))); 
+	}
+	
+	public static String[] getWarAPlayerHasNoNationMsg() {
+		return parseString(String.format(getLangString("msg_war_a_player_has_no_nation"))); 
+	}
+	
+	public static String[] getWarAPlayerHasANeutralNationMsg() {
+		return parseString(String.format(getLangString("msg_war_a_player_has_a_neutral_nation"))); 
+	}
+	
+	public static String[] getWarAPlayerHasBeenRemovedFromWarMsg() {
+		return parseString(String.format(getLangString("msg_war_a_player_has_been_removed_from_war")));
+	}
+	
+	public static String[] getWarPlayerCannotBeJailedPlotFallenMsg() {
+		return parseString(String.format(getLangString("msg_war_player_cant_be_jailed_plot_fallen")));
+	}
+	
+	public static String[] getWarAPlayerIsAnAllyMsg() {
+		return parseString(String.format(getLangString("msg_war_a_player_is_an_ally"))); 
+	}
+	
+	public static boolean isNotificationUsingTitles() {
+		return getBoolean(ConfigNodes.NOTIFICATION_USING_TITLES);		
+	}
+	
 }

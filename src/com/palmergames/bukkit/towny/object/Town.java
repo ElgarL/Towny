@@ -4,6 +4,7 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.event.TownAddResidentEvent;
 import com.palmergames.bukkit.towny.event.TownRemoveResidentEvent;
+import com.palmergames.bukkit.towny.event.TownTagChangeEvent;
 import com.palmergames.bukkit.towny.exceptions.*;
 import com.palmergames.bukkit.towny.permissions.TownyPerms;
 import com.palmergames.bukkit.util.BukkitTools;
@@ -11,21 +12,21 @@ import com.palmergames.bukkit.wallgen.Wall;
 import com.palmergames.bukkit.wallgen.WallSection;
 import com.palmergames.bukkit.wallgen.Walled;
 import com.palmergames.util.StringMgmt;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Town extends TownBlockOwner implements Walled, ResidentList {
 
 	private static final String ECONOMY_ACCOUNT_PREFIX = TownySettings.getTownAccountPrefix();
 
 	private List<Resident> residents = new ArrayList<Resident>();
-	//private List<Resident> assistants = new ArrayList<Resident>();
+	private List<Resident> outlaws = new ArrayList<Resident>();
 	private List<Location> outpostSpawns = new ArrayList<Location>();
+	private List<Location> jailSpawns = new ArrayList<Location>();
 	private Wall wall = new Wall();
 	private Resident mayor;
 	private int bonusBlocks, purchasedBlocks;
@@ -39,20 +40,22 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 	private Location spawn;
 	private boolean adminDisabledPVP = false; // This is a special setting to make a town ignore All PVP settings and keep PVP disabled.
 	private boolean adminEnabledPVP = false; // This is a special setting to make a town ignore All PVP settings and keep PVP enabled. Overrides the admin disabled too.
-	
+	public UUID uuid;
+
 	public Town(String name) {
 
 		setName(name);
 		tag = "";
 		bonusBlocks = 0;
 		purchasedBlocks = 0;
-		taxes = 0.0;
-		plotTax = 0.0;
-		commercialPlotTax = 0;
+		taxes = TownySettings.getTownDefaultTax();
+		plotTax = TownySettings.getTownDefaultPlotTax();
+		embassyPlotTax = TownySettings.getTownDefaultEmbassyTax();
+		commercialPlotTax = TownySettings.getTownDefaultShopTax();
 		plotPrice = 0.0;
 		hasUpkeep = true;
 		isPublic = TownySettings.getTownDefaultPublic();
-		isTaxPercentage = false;
+		isTaxPercentage = TownySettings.getTownDefaultTaxPercentage();
 		isOpen = TownySettings.getTownDefaultOpen();
 		permissions.loadDefault(this);
 	}
@@ -79,6 +82,7 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 		this.tag = text.toUpperCase();
 		if (this.tag.matches(" "))
 			this.tag = "";
+		Bukkit.getPluginManager().callEvent(new TownTagChangeEvent(this.tag));
 		setChangedName(true);
 	}
 
@@ -207,17 +211,6 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 			}
 	}
 
-//	public void addAssistant(Resident resident) throws AlreadyRegisteredException, NotRegisteredException {
-//
-//		if (hasAssistant(resident))
-//			throw new AlreadyRegisteredException();
-//
-//		if (!hasResident(resident))
-//			throw new NotRegisteredException(resident.getName() + " doesn't belong to your town.");
-//
-//		assistants.add(resident);
-//	}
-
 	public boolean isMayor(Resident resident) {
 
 		return resident == mayor;
@@ -337,7 +330,6 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 	}
 
 	public String getTownBoard() {
-
 		return townBoard;
 	}
 
@@ -381,10 +373,11 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 		int i = 1;
 		double cost = nextprice;
 		while (i < n){
-			nextprice = (Math.pow(TownySettings.getPurchasedBonusBlocksIncreaseValue() , getPurchasedBlocks()+i) * TownySettings.getPurchasedBonusBlocksCost());
+			nextprice = Math.round(Math.pow(TownySettings.getPurchasedBonusBlocksIncreaseValue() , getPurchasedBlocks()+i) * TownySettings.getPurchasedBonusBlocksCost());			
 			cost += nextprice;
 			i++;
 		}
+		cost = Math.round(cost);
 		return cost;
 	}
 
@@ -440,7 +433,31 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 		} catch (NullPointerException e) {
 			// In the event that spawn is already null
 		}
-
+		if (this.hasNation() && TownySettings.getNationRequiresProximity() > 0)
+			if (!this.getNation().getCapital().equals(this)) {
+				Nation nation = this.getNation();
+				Coord capitalCoord = nation.getCapital().getHomeBlock().getCoord();
+				Coord townCoord = this.getHomeBlock().getCoord();
+				if (nation.getCapital().getHomeBlock().getWorld().getName() != this.getHomeBlock().getWorld().getName()) {
+					TownyMessaging.sendNationMessagePrefixed(nation, String.format(TownySettings.getLangString("msg_nation_town_moved_their_homeblock_too_far"), this.getName()));
+					try {
+						nation.removeTown(this);
+					} catch (EmptyNationException e) {
+						e.printStackTrace();
+					}
+				}
+				double distance = 0;
+				distance = Math.sqrt(Math.pow(capitalCoord.getX() - townCoord.getX(), 2) + Math.pow(capitalCoord.getZ() - townCoord.getZ(), 2));			
+				if (distance > TownySettings.getNationRequiresProximity()) {
+					TownyMessaging.sendNationMessagePrefixed(nation, String.format(TownySettings.getLangString("msg_nation_town_moved_their_homeblock_too_far"), this.getName()));
+					try {
+						nation.removeTown(this);
+					} catch (EmptyNationException e) {
+						e.printStackTrace();
+					}
+				}	
+			}
+			
 		return true;
 	}
 	
@@ -662,6 +679,7 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 		//assistants.clear();
 		homeBlock = null;
 		outpostSpawns.clear();
+		jailSpawns.clear();
 
 		try {
 			if (hasWorld()) {
@@ -691,7 +709,9 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 			// Remove the spawn point for this outpost.
 			if (townBlock.isOutpost())
 				removeOutpostSpawn(townBlock.getCoord());
-
+			if (townBlock.isJail())
+				removeJailSpawn(townBlock.getCoord());
+			
 			// Clear the towns homeblock if this is it.
 			try {
 				if (getHomeBlock() == townBlock)
@@ -699,6 +719,7 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 			} catch (TownyException e) {
 			}
 			townBlocks.remove(townBlock);
+			TownyUniverse.getDataSource().saveTown(this);
 		}
 	}
 
@@ -780,8 +801,10 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 
 		for (Location spawn : new ArrayList<Location>(outpostSpawns)) {
 			Coord spawnBlock = Coord.parseCoord(spawn);
-			if ((coord.getX() == spawnBlock.getX()) && (coord.getZ() == coord.getZ())) {
+			if ((coord.getX() == spawnBlock.getX()) && (coord.getZ() == spawnBlock.getZ())) {
 				outpostSpawns.remove(spawn);
+			} else {
+				TownyMessaging.sendErrorMsg("removeOutPostSpawn : no outpost found where one ought to be");
 			}
 		}
 	}
@@ -840,7 +863,7 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 
 		return embassyPlotPrice;
 	}
-
+	
 	@Override
 	public Wall getWall() {
 
@@ -1008,5 +1031,151 @@ public class Town extends TownBlockOwner implements Walled, ResidentList {
 	@Override
 	public String getEconomyName() {
 		return StringMgmt.trimMaxLength(Town.ECONOMY_ACCOUNT_PREFIX + getName(), 32);
+	}
+
+	public List<Location> getJailSpawns() {
+
+		return jailSpawns;
+	}
+
+	public void addJailSpawn(Location spawn) throws TownyException {
+
+		removeJailSpawn(Coord.parseCoord(spawn));
+
+		Coord spawnBlock = Coord.parseCoord(spawn);
+
+		try {
+			TownBlock jail = TownyUniverse.getDataSource().getWorld(spawn.getWorld().getName()).getTownBlock(spawnBlock);
+			if (jail.getX() == spawnBlock.getX() && jail.getZ() == spawnBlock.getZ()) {
+				if (!jail.isJail())
+					throw new TownyException("Location is not within a Jail plot.");
+				
+				jailSpawns.add(spawn);
+				TownyUniverse.getDataSource().saveTown(this);			
+			}
+
+		} catch (NotRegisteredException e) {
+			throw new TownyException("Location is not within a Town.");
+		}
+
+	}
+	
+	public void removeJailSpawn(Coord coord) {
+
+		for (Location spawn : new ArrayList<Location>(jailSpawns)) {
+			Coord spawnBlock = Coord.parseCoord(spawn);
+			if ((coord.getX() == spawnBlock.getX()) && (coord.getZ() == spawnBlock.getZ())) {
+				jailSpawns.remove(spawn);
+				TownyUniverse.getDataSource().saveTown(this);
+			}
+		}
+	}
+
+	/**
+	 * Only to be called from the Loading methods.
+	 * 
+	 * @param spawn
+	 */
+	public void forceAddJailSpawn(Location spawn) {
+
+		jailSpawns.add(spawn);
+	}
+
+	/**
+	 * Return the Location for this Jail index.
+	 * 
+	 * @param index
+	 * @return Location of jail spawn
+	 * @throws TownyException
+	 */
+	public Location getJailSpawn(Integer index) throws TownyException {
+
+		if (getMaxJailSpawn() == 0)
+			throw new TownyException("Town has no jail spawns set.");
+
+		return jailSpawns.get(Math.min(getMaxJailSpawn() - 1, Math.max(0, index - 1)));
+	}
+
+	public int getMaxJailSpawn() {
+
+		return jailSpawns.size();
+	}
+
+	public boolean hasJailSpawn() {
+
+		return (jailSpawns.size() > 0);
+	}
+	
+	/**
+	 * Get an unmodifiable List of all jail spawns.
+	 * 
+	 * @return List of jailSpawns
+	 */
+	public List<Location> getAllJailSpawns() {
+
+		return Collections.unmodifiableList(jailSpawns);
+	}
+
+	@Override
+	public List<Resident> getOutlaws() {
+
+		return outlaws;
+	}
+	
+	public boolean hasOutlaw (String name) {
+		
+		for (Resident outlaw : outlaws)
+			if (outlaw.getName().equalsIgnoreCase(name))
+				return true;
+		return false;		
+	}
+	
+	public boolean hasOutlaw(Resident outlaw) {
+
+		return outlaws.contains(outlaw);
+	}
+	
+	public void addOutlaw(Resident resident) throws AlreadyRegisteredException {
+
+		addOutlawCheck(resident);
+		outlaws.add(resident);
+	}
+	
+	public void addOutlawCheck(Resident resident) throws AlreadyRegisteredException {
+
+		if (hasOutlaw(resident))
+			throw new AlreadyRegisteredException(TownySettings.getLangString("msg_err_resident_already_an_outlaw"));
+		else if (resident.hasTown())
+			try {
+				if (resident.getTown().equals(this))
+					throw new AlreadyRegisteredException(TownySettings.getLangString("msg_err_not_outlaw_in_your_town"));
+			} catch (NotRegisteredException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
+	
+	public void removeOutlaw(Resident resident) throws NotRegisteredException {
+
+		if (!hasOutlaw(resident))
+			throw new NotRegisteredException();
+		else 
+			outlaws.remove(resident);			
+	}
+
+	public UUID getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
+	}
+
+	public boolean hasValidUUID() {
+		if (uuid != null) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

@@ -90,12 +90,6 @@ public enum ConfigNodes {
 			"  #        towny.town.spawn.public : Ability to spawn to unaffilated public towns.",
 			"  #",
 			"  # these will be moved to permissions nodes at a later date"),
-	PERMS_TOWN_CREATION_ADMIN_ONLY(
-			"permissions.town_creation_admin_only",
-			"false"),
-	PERMS_NATION_CREATION_ADMIN_ONLY(
-			"permissions.nation_creation_admin_only",
-			"false"),
 	LEVELS(
 			"levels",
 			"",
@@ -118,7 +112,6 @@ public enum ConfigNodes {
 			"  # +------------------------------------------------------+ #",
 			"  ############################################################",
 			""),
-
 	TOWN_DEF_PUBLIC(
 			"town.default_public",
 			"true",
@@ -127,6 +120,33 @@ public enum ConfigNodes {
 			"town.default_open",
 			"false",
 			"# Default Open status of the town (are new towns open and joinable by anyone at creation?)"),
+	TOWN_DEF_TAXES(
+			"town.default_taxes", "", "# Default tax settings for new towns."),
+	TOWN_DEF_TAXES_TAX(
+			"town.default_taxes.tax",
+			"0.0",
+			"# Default amount of tax of a new town. This must be lower than the economy.daily_taxes.max_tax_percent setting."),
+	TOWN_DEF_TAXES_SHOP_TAX(
+			"town.default_taxes.shop_tax",
+			"0.0",
+			"# Default amount of shop tax of a new town."),
+	TOWN_DEF_TAXES_EMBASSY_TAX(
+			"town.default_taxes.embassy_tax",
+			"0.0",
+			"# Default amount of embassy tax of a new town."),
+	TOWN_DEF_TAXES_PLOT_TAX(
+			"town.default_taxes.plot_tax",
+			"0.0",
+			"# Default amount for town's plottax costs."),
+	TOWN_DEF_TAXES_TAXPERCENTAGE(
+			"town.default_taxes.taxpercentage",
+			"false",
+			"# Default status of new town's taxpercentage. True means that the default_tax is treated as a percentage instead of a fixed amount."),	
+	TOWN_DEF_TAXES_MINIMUMTAX(
+			"town.default_taxes.minimumtax",
+			"0.0",			
+			"# A required minimum tax amount for the default_tax, will not change any towns which already have a tax set.",
+			"# Do not forget to set the default_tax to more than 0 or new towns will still begin with a tax of zero."),
 	TOWN_MAX_PURCHASED_BLOCKS(
 			"town.max_purchased_blocks",
 			"0",
@@ -135,6 +155,13 @@ public enum ConfigNodes {
 			"town.max_plots_per_resident",
 			"100",
 			"# maximum number of plots any single resident can own"),
+	TOWN_MAX_CLAIM_RADIUS_VALUE(
+			"town.max_claim_radius_value",
+			"4",
+			"# maximum number used in /town claim/unclaim # commands.",
+			"# set to 0 to disable limiting of claim radius value check.",
+			"# keep in mind that the default value of 4 is a radius, ",
+			"# and it will allow claiming 9x9 (80 plots) at once."),
 	TOWN_LIMIT(
 			"town.town_limit",
 			"3000",
@@ -181,10 +208,10 @@ public enum ConfigNodes {
 			"  # +------------------------------------------------------+ #",
 			"  ############################################################",
 			"",
-			"  # These flags are only used at the initial setp of a new world.",
+			"  # These flags are only used at the initial setup of a new world.",
 			"",
-			" # Once Towny is running each world can be altered from within game",
-			" # using '/townyworld toggle'",
+			"  # Once Towny is running each world can be altered from within game",
+			"  # using '/townyworld toggle'",
 			""),
 
 	NWS_WORLD_USING_TOWNY("new_world_settings.using_towny", "true",
@@ -290,6 +317,8 @@ public enum ConfigNodes {
 			"# Regeneration will only work if the plot was",
 			"# claimed under version 0.76.2, or",
 			"# later with this feature enabled",
+			"# Unlike the rest of this config section, the speed setting is not",
+			"# set per-world. What you set for speed will be used in all worlds.",
 			"#",
 			"# If you allow players to break/build in the wild the snapshot will",
 			"# include any changes made before the plot was claimed."),
@@ -382,6 +411,50 @@ public enum ConfigNodes {
 			"true",
 			"# Enables the [~Home] message.",
 			"# If false it will make it harder for enemies to find the home block during a war"),
+	GTOWN_SETTINGS_REQUIRED_NUMBER_RESIDENTS_JOIN_NATION(
+			"global_town_settings.required_number_residents_join_nation",
+			"0",
+			"# The required number of residents in a town to join a nation",
+			"# If the number is 0, towns will not require a certain amount of residents to join a nation"
+			),
+	GTOWN_SETTINGS_REQUIRED_NUMBER_RESIDENTS_CREATE_NATION(
+			"global_town_settings.required_number_residents_create_nation",
+			"0",
+			"# The required number of residents in a town to create a nation",
+			"# If the number is 0, towns will not require a certain amount of residents to create a nation"
+			),
+	GTOWN_SETTINGS_REFUND_DISBAND_LOW_RESIDENTS(
+			"global_town_settings.refund_disband_low_residents",
+			"true",
+			"# If set to true, if a nation is disbanded due to a lack of residents, the capital will be refunded the cost of nation creation."
+			),
+	GTOWN_SETTINGS_NATION_REQUIRES_PROXIMITY(
+			"global_town_settings.nation_requires_proximity",
+			"0.0",
+			"# The maximum number of townblocks a town can be away from a nation capital,",
+			"# Automatically precludes towns from one world joining a nation in another world.",
+			"# If the number is 0, towns will not a proximity to a nation."
+			),
+	GTOWN_FARM_PLOT_ALLOW_BLOCKS(
+			"global_town_settings.farm_plot_allow_blocks",
+			"LONG_GRASS,DOUBLE_PLANT,YELLOW_FLOWER,RED_ROSE,PUMPKIN_STEM,MELON_STEM,BEETROOT_BLOCK,CARROT,POTATO,CROPS,MELON_BLOCK,PUMPKIN,BEETROOT_BLOCK,CHORUS_PLANT,CHORUS_FLOWER",
+			"# List of blocks which can be modified on farm plots, as long as player is also allowed in the plot's '/plot perm' line."
+			),
+	GTOWN_FARM_ANIMALS(
+			"global_town_settings.farm_animals",
+			"PIG,COW,CHICKEN,SHEEP,MOOSHROOM",
+			"# List of animals which can be kiled on farm plots by town residents."
+			),
+	GTOWN_MAX_RESIDENTS_PER_TOWN(
+			"global_town_settings.max_residents_per_town",
+			"0",
+			"# The maximum number of residents that can be joined to a town. Setting to 0 disables this feature."
+			),
+	GTOWN_SETTINGS_DISPLAY_TOWNBOARD_ONLOGIN(
+			"global_town_settings.display_board_onlogin",
+			"true",
+			"# If Towny should show players the townboard when they login"
+	),
 	PLUGIN(
 			"plugin",
 			"",
@@ -412,6 +485,7 @@ public enum ConfigNodes {
 	PLUGIN_DATABASE_TABLEPREFIX("plugin.database.sql.table_prefix", "towny_"),
 	PLUGIN_DATABASE_USERNAME("plugin.database.sql.username", "root"),
 	PLUGIN_DATABASE_PASSWORD("plugin.database.sql.password", ""),
+	PLUGIN_DATABASE_SSL("plugin.database.sql.ssl", "false"),
 
 	PLUGIN_DAILY_BACKUPS_HEADER(
 			"plugin.database.daily_backups",
@@ -537,6 +611,9 @@ public enum ConfigNodes {
 	FILTERS_REGEX_NAME_CHECK_REGEX(
 			"filters_colour_chat.regex.name_check_regex",
 			"^[a-zA-Z0-9._\\[\\]-]*$"),
+	FILTERS_REGEX_STRING_CHECK_REGEX(
+			"filters_colour_chat.regex.string_check_regex",
+			"^[a-zA-Z0-9\\s._\\[\\]-]*$"),		
 	FILTERS_REGEX_NAME_REMOVE_REGEX(
 			"filters_colour_chat.regex.name_remove_regex",
 			"[^a-zA-Z0-9._\\[\\]-]"),
@@ -578,18 +655,19 @@ public enum ConfigNodes {
 			"# 385 - fire charge"),
 	PROT_SWITCH_MAT(
 			"protection.switch_ids",
-			"DISPENSER,NOTE_BLOCK,CHEST,FURNACE,BURNING_FURNACE,WOODEN_DOOR,LEVER,STONE_PLATE,IRON_DOOR_BLOCK,WOOD_PLATE,STONE_BUTTON,TRAP_DOOR,JUKEBOX,DIODE_BLOCK_OFF,DIODE_BLOCK_ON,FENCE_GATE,TRAPPED_CHEST,GOLD_PLATE,IRON_PLATE,REDSTONE_COMPARATOR_OFF,REDSTONE_COMPARATOR_ON,BEACON,HOPPER,DROPPER,MINECART,STORAGE_MINECART,POWERED_MINECART,CARROT_STICK,EXPLOSIVE_MINECART,HOPPER_MINECART",
+			"DISPENSER,NOTE_BLOCK,CHEST,FURNACE,BURNING_FURNACE,WOODEN_DOOR,ACACIA_DOOR,DARK_OAK_DOOR,JUNGLE_DOOR,BIRCH_DOOR,SPRUCE_DOOR,LEVER,STONE_PLATE,IRON_DOOR_BLOCK,WOOD_PLATE,STONE_BUTTON,TRAP_DOOR,JUKEBOX,DIODE_BLOCK_OFF,DIODE_BLOCK_ON,FENCE_GATE,SPRUCE_FENCE_GATE,BIRCH_FENCE_GATE,JUNGLE_FENCE_GATE,DARK_OAK_FENCE_GATE,ACACIA_FENCE_GATE,TRAPPED_CHEST,GOLD_PLATE,IRON_PLATE,REDSTONE_COMPARATOR_OFF,REDSTONE_COMPARATOR_ON,BEACON,HOPPER,DROPPER,MINECART,STORAGE_MINECART,POWERED_MINECART,CARROT_STICK,EXPLOSIVE_MINECART,HOPPER_MINECART,WHITE_SHULKER_BOX,ORANGE_SHULKER_BOX,MAGENTA_SHULKER_BOX,LIGHT_BLUE_SHULKER_BOX,YELLOW_SHULKER_BOX,LIME_SHULKER_BOX,PINK_SHULKER_BOX,GRAY_SHULKER_BOX,SILVER_SHULKER_BOX,CYAN_SHULKER_BOX,PURPLE_SHULKER_BOX,BLUE_SHULKER_BOX,BROWN_SHULKER_BOX,GREEN_SHULKER_BOX,RED_SHULKER_BOX,BLACK_SHULKER_BOX",
 			"",
 			"# Items which can be blocked or enabled via town/plot flags",
 			"# 25 - noteblock",
 			"# 54 - chest ...etc"),
 	PROT_MOB_REMOVE_TOWN(
 			"protection.town_mob_removal_entities",
-			"Monster,WaterMob,Flying,Slime",
+			"Monster,WaterMob,Flying,Slime,Shulker,SkeletonHorse,ZombieHorse",
 			"",
-			"# permitted entities http://jd.bukkit.org/apidocs/org/bukkit/entity/package-summary.html",
+			"# permitted entities https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/LivingEntity.htmll",
 			"# Animals, Chicken, Cow, Creature, Creeper, Flying, Ghast, Giant, Monster, Pig, ",
-			"# PigZombie, Sheep, Skeleton, Slime, Spider, Squid, WaterMob, Wolf, Zombie",
+			"# PigZombie, Sheep, Skeleton, Slime, Spider, Squid, WaterMob, Wolf, Zombie, Shulker",
+			"# Husk, Stray, SkeletonHorse, ZombieHorse, Vex, Vindicator, Evoker, Endermite, PolarBear",
 			"",
 			"# Remove living entities within a town's boundaries, if the town has the mob removal flag set."),
 
@@ -673,8 +751,6 @@ public enum ConfigNodes {
 			"unclaimed.unclaimed_zone_ignore",
 			"SAPLING,GOLD_ORE,IRON_ORE,COAL_ORE,LOG,LEAVES,LAPIS_ORE,LONG_GRASS,YELLOW_FLOWER,RED_ROSE,BROWN_MUSHROOM,RED_MUSHROOM,TORCH,DIAMOND_ORE,LADDER,RAILS,REDSTONE_ORE,GLOWING_REDSTONE_ORE,CACTUS,CLAY,SUGAR_CANE_BLOCK,PUMPKIN,GLOWSTONE"),
 	UNCLAIMED_ZONE_SWITCH("unclaimed.unclaimed_zone_switch", "false"),
-	//UNCLAIMED_ZONE_NAME("unclaimed.unclaimed_zone_name",""),
-	//UNCLAIMED_PLOT_NAME("unclaimed.unclaimed_plot_name",""),
 
 	NOTIFICATION(
 			"notification",
@@ -714,8 +790,14 @@ public enum ConfigNodes {
 			"&b[Outpost]"),
 	NOTIFICATION_PLOT_FORSALE("notification.plot.forsale", "&e[For Sale: %s]"),
 	NOTIFICATION_PLOT_TYPE("notification.plot.type", "&6[%s]"),
+	NOTIFICATION_USING_TITLES(
+			"notification.using_titles", 
+			"false", 
+			"# If set to true MC's Title and Subtitle feature will be used when crossing into a town.",
+			"# Could be seen as intrusive/distracting, so false by default."),
 	FLAGS_DEFAULT(
 			"default_perm_flags",
+			"",	
 			"",
 			"",
 			"",
@@ -985,7 +1067,44 @@ public enum ConfigNodes {
 			"# If enabled and you set a negative upkeep for the town",
 			"# any funds the town gains via upkeep at a new day",
 			"# will be shared out between the plot owners."),
-
+	JAIL(
+			"jail",
+			"",
+			"",
+			"",
+			"  ############################################################",
+			"  # +------------------------------------------------------+ #",
+			"  # |                 Jail Plot settings                   | #",
+			"  # +------------------------------------------------------+ #",
+			"  ############################################################",
+			""),	
+	JAIL_IS_JAILING_ATTACKING_ENEMIES(
+			"jail.is_jailing_attacking_enemies",
+			"false",
+			"#If true attacking players who die on enemy-town land will be placed into the defending town's jail if it exists.",
+			"#Requires town_respawn to be true in order to work."),
+	JAIL_IS_JAILING_ATTACKING_OUTLAWS(
+			"jail.is_jailing_attacking_outlaws",
+			"false",
+			"#If true attacking players who are considered an outlaw, that are killed inside town land will be placed into the defending town's jail if it exists.",
+			"#Requires town_respawn to be true in order to work."),
+	JAIL_JAIL_ALLOWS_ENDER_PEARLS(
+			"jail.jail_allows_ender_pearls",
+			"false",
+			"#If true jailed players can use Ender Pearls but are still barred from using other methods of teleporting."),
+	JAIL_JAIL_DENIES_TOWN_LEAVE(
+			"jail.jail_denies_town_leave",
+			"false",
+			"#If false jailed players can use /town leave, and escape a jail."),		
+	JAIL_BAIL("jail.bail", "", ""),
+	JAIL_BAIL_IS_ALLOWING_BAIL(
+			"jail.bail.is_allowing_bail",
+			"false",
+			"#If true players can pay a bail amount to be unjailed."),	
+	JAIL_BAIL_BAIL_AMOUNT(
+			"jail.bail.bail_amount",
+			"10",
+			"#Amount that bail costs."),	
 	WAR(
 			"war",
 			"",
@@ -995,12 +1114,17 @@ public enum ConfigNodes {
 			"  # +------------------------------------------------------+ #",
 			"  # |                     War settings                     | #",
 			"  # +------------------------------------------------------+ #",
-			"############################################################",
+			"  ############################################################",
 			""),
 	WARTIME_NATION_CAN_BE_NEUTRAL(
 			"war.nation_can_be_neutral",
 			"true",
 			"#This setting allows you disable the ability for a nation to pay to remain neutral during a war."),
+	WAR_DISALLOW_ONE_WAY_ALLIANCE(
+			"war.disallow_one_way_alliance",
+			"false",
+			"#By setting this to true, nations will receive a questioner prompt for alliances and alliances will show on both nations."
+			),
 	WAR_ECONOMY(
 			"war.economy",
 			"",
@@ -1060,6 +1184,18 @@ public enum ConfigNodes {
 			"war.event.towns_are_neutral",
 			"true",
 			"#If false all towns not in nations can be attacked during a war event."),
+	WAR_EVENT_ENEMY_ONLY_ATTACK_BORDER(
+			"war.event.enemy.only_attack_borders",
+			"true",
+			"# If true, enemy's can only attack the edge plots of a town in war."),
+	WAR_EVENT_PLOTS_HEALABLE(
+			"war.event.plots.healable",
+			"true",
+			"# If true, nation members and allies can regen health on plots during war."),
+	WAR_EVENT_PLOTS_FIREWORK_ON_ATTACKED(
+			"war.event.plots.firework_on_attacked",
+			"true",				
+			"# If true, fireworks will be launched at plots being attacked or healed in war every war tick."),
 	WAR_EVENT_REMOVE_ON_MONARCH_DEATH(
 			"war.event.remove_on_monarch_death",
 			"false",
@@ -1067,9 +1203,10 @@ public enum ConfigNodes {
 			"# If true and the monarch/king dies the nation is removed from the war."),
 	WAR_EVENT_BLOCK_GRIEFING(
 			"war.event.allow_block_griefing",
-			"true",
-			"# If enabled players will be able to break/place blocks in enemy plots during a war."),
-
+			"false",
+			"# If enabled players will be able to break/place any blocks in enemy plots during a war.",
+			"# This setting SHOULD NOT BE USED unless you want the most chaotic war possible.", 
+			"# The editable_materials list in the Warzone Block Permission section should be used instead."),
 	WAR_EVENT_BLOCK_HP_HEADER(
 			"war.event.block_hp",
 			"",
@@ -1091,6 +1228,11 @@ public enum ConfigNodes {
 			"war.event.eco.price_death_wartime",
 			"200.0",
 			"# This amount is taken from the player if they die during the event"),
+	WAR_EVENT_COSTS_TOWNBLOCKS(
+			"war.event.costs_townblocks",
+			"false",
+			"# If set to true when a town drops an enemy townblock's HP to 0, the attacking town gains a bonus townblock,",
+			"# and the losing town gains a negative (-1) bonus townblock."),
 
 	WAR_EVENT_POINTS_HEADER("war.event.points", "", ""),
 	WAR_EVENT_POINTS_TOWNBLOCK("war.event.points.points_townblock", "1"),
@@ -1109,6 +1251,9 @@ public enum ConfigNodes {
 			"############################################################",
 			"# +------------------------------------------------------+ #",
 			"# |                   Flag war settings                  | #",
+			"# |                                                      | #",
+			"# |               Separate from Event War                | #",
+			"# |                 Unsupported / Buggy                  | #",
 			"# +------------------------------------------------------+ #",
 			"############################################################",
 			""),
@@ -1167,6 +1312,8 @@ public enum ConfigNodes {
 			"############################################################",
 			"# +------------------------------------------------------+ #",
 			"# |              Warzone Block Permissions               | #",
+			"# |                                                      | #",
+			"# |              Used in Flag & Event Wars               | #",
 			"# +------------------------------------------------------+ #",
 			"############################################################",
 			""),
@@ -1189,8 +1336,13 @@ public enum ConfigNodes {
 			"true"),
 	WAR_WARZONE_EXPLOSIONS_REGEN_BLOCKS(
 			"war.warzone.explosions_regen_blocks",
-			"true",
-			"# TODO: Blocks will not regen as of yet. Stay tuned for later changes.",
+			"true",			
+			"# Only under affect when explosions_break_blocks is true."),
+	WAR_WARZONE_EXPLOSIONS_IGNORE_LIST(
+			"war.warzone.explosions_ignore_list",
+			"WOODEN_DOOR,ACACIA_DOOR,DARK_OAK_DOOR,JUNGLE_DOOR,BIRCH_DOOR,SPRUCE_DOOR,IRON_DOOR,CHEST,TRAPPED_CHEST,FURNACE,BURNING_FURNACE,DROPPER,DISPENSER,HOPPER,ENDER_CHEST,WHITE_SHULKER_BOX,ORANGE_SHULKER_BOX,MAGENTA_SHULKER_BOX,LIGHT_BLUE_SHULKER_BOX,YELLOW_SHULKER_BOX,LIME_SHULKER_BOX,PINK_SHULKER_BOX,GRAY_SHULKER_BOX,SILVER_SHULKER_BOX,CYAN_SHULKER_BOX,PURPLE_SHULKER_BOX,BLUE_SHULKER_BOX,BROWN_SHULKER_BOX,GREEN_SHULKER_BOX,RED_SHULKER_BOX,BLACK_SHULKER_BOX,NOTE_BLOCK,LEVER,STONE_PLATE,IRON_DOOR_BLOCK,WOOD_PLATE,JUKEBOX,DIODE_BLOCK_OFF,DIODE_BLOCK_ON,FENCE_GATE,GOLD_PLATE,IRON_PLATE,REDSTONE_COMPARATOR_OFF,REDSTONE_COMPARATOR_ON,BEACON",
+			"# A list of blocks that will not be exploded, mostly because they won't regenerate properly.",
+			"# These blocks will also protect the block below them, so that blocks like doors do not dupe themselves.",
 			"# Only under affect when explosions_break_blocks is true."), ;
 
 	private final String Root;
@@ -1239,5 +1391,4 @@ public enum ConfigNodes {
 		comments[0] = "";
 		return comments;
 	}
-
 }

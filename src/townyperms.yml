@@ -17,11 +17,16 @@ nomad:
     - towny.command.towny.universe
     - towny.command.towny.version
     - towny.command.towny.war
+    - towny.command.town.online
+    - towny.command.town.here
     - towny.command.town.new
     - towny.command.town.join
     - towny.command.town.list
     - towny.command.plot.perm
     - towny.command.nation.list
+    - towny.command.nation.othernation
+    - towny.command.town.othertown
+    - towny.command.resident.otherresident
     - towny.town.resident
     - towny.town.spawn.public
     - towny.chat.general
@@ -51,6 +56,7 @@ towns:
         - towny.command.plot.*
         - towny.claimed.owntown.*
         - towny.command.nation.new
+        - towny.outlaw.jailer
 
     ranks:
         # Ranks contain additional permissions residents will be
@@ -65,12 +71,17 @@ towns:
             # assistants are able to grant VIP and helper rank
             - towny.command.town.rank.vip
             - towny.command.town.rank.helper
+            - towny.outlaw.jailer
         helper:
-            towny.claimed.townowned.switch.*
+            - towny.claimed.townowned.switch.*
         donator:
             # Currently only an example rank holder with no extra permissions
         vip:
             - towny.cheat.bypass
+        # Sheriff rank is able to jail other town members.
+        sheriff:
+            - towny.command.town.toggle.jail
+            - towny.outlaw.jailer
             
 # This section of permissions covers players who are members of any town in a nation.
 nations:

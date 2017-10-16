@@ -4,16 +4,19 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.event.NationAddTownEvent;
 import com.palmergames.bukkit.towny.event.NationRemoveTownEvent;
+import com.palmergames.bukkit.towny.event.NationTagChangeEvent;
 import com.palmergames.bukkit.towny.exceptions.*;
 import com.palmergames.bukkit.towny.permissions.TownyPerms;
 import com.palmergames.bukkit.towny.war.flagwar.TownyWar;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.util.StringMgmt;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class Nation extends TownyEconomyObject implements ResidentList {
 
@@ -27,6 +30,7 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 	private double taxes;
 	private boolean neutral = false;
 	private String tag;
+	public UUID uuid;
 
 	public Nation(String name) {
 
@@ -41,6 +45,7 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 		this.tag = text.toUpperCase();
 		if (this.tag.matches(" "))
 			this.tag = "";
+		Bukkit.getPluginManager().callEvent(new NationTagChangeEvent(this.tag));
 		setChangedName(true);
 	}
 
@@ -221,7 +226,7 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 				addAlly(nation);
 				if (!hasEnemy(nation) && hasAlly(nation))
 					return true;
-			} else if (type.equalsIgnoreCase("neutral")) {
+			} else if (type.equalsIgnoreCase("peaceful") || type.equalsIgnoreCase("neutral")) {
 				removeEnemy(nation);
 				removeAlly(nation);
 				if (!hasEnemy(nation) && !hasAlly(nation))
@@ -495,5 +500,30 @@ public class Nation extends TownyEconomyObject implements ResidentList {
 	@Override
 	public String getEconomyName() {
 		return StringMgmt.trimMaxLength(Nation.ECONOMY_ACCOUNT_PREFIX + getName(), 32);
+	}
+
+	@Override
+	public List<Resident> getOutlaws() {
+
+		List<Resident> out = new ArrayList<Resident>();
+		for (Town town : getTowns())
+			out.addAll(town.getOutlaws());
+		return out;
+	}
+
+	public UUID getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
+	}
+
+	public boolean hasValidUUID() {
+		if (uuid != null) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

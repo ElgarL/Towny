@@ -1,13 +1,13 @@
 name: Towny
 main: com.palmergames.bukkit.towny.Towny
-version: 0.89.2.9
-author: Shade, Modified by FuzzeWuzze. Forked by ElgarL
+version: 0.91.4.12
+author: Shade, Modified by FuzzeWuzze. Forked by ElgarL. Forked by LlmDl.
 website: http://code.google.com/a/eclipselabs.org/p/towny/
 description: >
     Resident-Town-Nation heirarchy combined with a grid based
     protection system. Including a war event.
 
-softdepend: [MultiVerse,Multiverse-Core,XcraftGate,My Worlds,Citizens,PersonalWorlds,WormholeXTremeWorlds,Vault]
+softdepend: [MultiVerse,Multiverse-Core,XcraftGate,My Worlds,Citizens,PersonalWorlds,WormholeXTremeWorlds,Vault,MultiWorld]
 
 ############################################################
 # +------------------------------------------------------+ #
@@ -46,6 +46,7 @@ permissions:
             towny.command.townyworld.*: true
             towny.command.towny.*: true
             towny.command.town.*: true
+            towny.command.town.claim.town.multiple: true
             towny.command.nation.*: true
             towny.command.plot.*: true
             towny.town.resident: true
@@ -57,6 +58,10 @@ permissions:
     towny.cheat.bypass:
         description: Disables the anti cheat code for players with this node.
         default: op
+        
+    towny.outlaw.jailer:
+        description: Node given in townyperms.yml to mayors, assistants and sheriffs by default. Required to jail outlaws that are killed in a town.
+        default: false
         
     towny.town.resident:
         description: User is permitted to join towns.
@@ -129,8 +134,10 @@ permissions:
             towny.command.nation.enemy: true
             towny.command.nation.delete: true
             towny.command.nation.online: true
+            towny.command.nation.say: true
             towny.command.nation.add: true
             towny.command.nation.kick: true
+            towny.command.nation.othernation: true
 
     towny.command.nation.set.*:
         description: User can access any of the nation set commands.
@@ -175,6 +182,9 @@ permissions:
             towny.command.town.claim.*: true
             towny.command.town.unclaim: true
             towny.command.town.online: true
+            towny.command.town.say: true
+            towny.command.town.plots: true
+            towny.command.town.othertown: true
             
     towny.command.town.claim.*:
         description: User can access all town related commands.
@@ -182,6 +192,7 @@ permissions:
         children:
             towny.command.town.claim.town: true
             towny.command.town.claim.outpost: true
+            towny.command.town.claim.town.multiple: false
 
     towny.command.town.set.*:
         description: User can access all town set commands.
@@ -193,6 +204,7 @@ permissions:
             towny.command.town.set.spawn: true
             towny.command.town.set.outpost: true
             towny.command.town.set.perm: true
+            towny.command.town.set.jail: true
             towny.command.town.set.taxes: true
             towny.command.town.set.plottax: true
             towny.command.town.set.shoptax: true
@@ -214,6 +226,7 @@ permissions:
             towny.command.town.toggle.mobs: true
             towny.command.town.toggle.taxpercent: true
             towny.command.town.toggle.open: true
+            towny.command.town.toggle.jail: true
     
     # Plot command permissions
     towny.command.plot.*:
@@ -226,6 +239,7 @@ permissions:
             towny.command.plot.notforsale: true
             towny.command.plot.forsale: true
             towny.command.plot.perm: true
+            towny.command.plot.perm.hud: true
             towny.command.plot.toggle.*: true
             towny.command.plot.set.*: true
             towny.command.plot.clear: true
@@ -249,8 +263,12 @@ permissions:
             towny.command.plot.set.shop: true
             towny.command.plot.set.embassy: true
             towny.command.plot.set.arena: true
+            towny.command.plot.set.farm: true
+            towny.command.plot.set.inn: true
             towny.command.plot.set.wilds: true
             towny.command.plot.set.spleef: true
+            towny.command.plot.set.inn: true
+            towny.command.plot.set.jail: true
     
     # Resident command permissions
     towny.command.resident.*:
@@ -259,9 +277,11 @@ permissions:
         children:
             towny.command.resident.list: true
             towny.command.resident.tax: true
+            towny.command.resident.jail: true
             towny.command.resident.set.*: true
             towny.command.resident.toggle.*: true
             towny.command.resident.friend: true
+            towny.command.resident.otherresident: true
 
     towny.command.resident.set.*:
         description: User can access the plot set command.
@@ -299,6 +319,15 @@ permissions:
             towny.command.townyadmin.purge: true
             owny.command.townyadmin.resident.delete: true
             towny.command.townyadmin.unclaim: true
+            towny.command.townyadmin.town.spawn: true
+            towny.command.townyadmin.town.spawn.freecharge: true
+
+    towny.command.townyadmin.town.spawn.*:
+        description: User can access town spawns
+        default: false
+        children:
+            towny.command.townyadmin.town.spawn: true
+            towny.command.townyadmin.town.spawn.freecharge: true
     
     towny.command.townyadmin.set.*:
         description: User can access the admin set commands.
@@ -315,6 +344,7 @@ permissions:
             towny.command.townyadmin.town.kick: true
             towny.command.townyadmin.town.delete: true
             towny.command.townyadmin.town.rename: true
+            towny.command.townyadmin.town.rank: true
     
     towny.command.townyadmin.nation.*:
         description: User can access the admin nation commands.
@@ -348,6 +378,7 @@ permissions:
             towny.command.towny.universe: true
             towny.command.towny.version: true
             towny.command.towny.war: true
+            towny.command.towny.war.hud: true
             towny.command.towny.spy: true
     
     # TownyWorld command permissions

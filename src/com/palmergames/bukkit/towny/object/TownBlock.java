@@ -1,9 +1,12 @@
 package com.palmergames.bukkit.towny.object;
 
 import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.event.PlotChangeOwnerEvent;
+import com.palmergames.bukkit.towny.event.PlotChangeTypeEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
+import org.bukkit.Bukkit;
 
 public class TownBlock {
 
@@ -22,7 +25,7 @@ public class TownBlock {
 	//Plot level permissions
 	protected TownyPermission permissions = new TownyPermission();
 	protected boolean isChanged;
-
+	
 	public TownBlock(int x, int z, TownyWorld world) {
 
 		this.x = x;
@@ -62,7 +65,7 @@ public class TownBlock {
 	}
 
 	public void setResident(Resident resident) {
-
+		boolean successful;
 		try {
 			if (hasResident())
 				this.resident.removeTownBlock(this);
@@ -71,9 +74,17 @@ public class TownBlock {
 		this.resident = resident;
 		try {
 			resident.addTownBlock(this);
+			successful = true;
 		} catch (AlreadyRegisteredException e) {
+			successful = false;
 		} catch (NullPointerException e) {
+			successful = false;
 		}
+		if (successful && resident != null) { //Should not cause a NPE, is checkingg if resident is null and
+			// if "this.resident" returns null (Unclaimed / Wilderness) the PlotChangeOwnerEvent changes it to: "undefined"
+			Bukkit.getPluginManager().callEvent(new PlotChangeOwnerEvent(this.resident, resident));
+		}
+		this.resident = resident;
 	}
 
 	public Resident getResident() throws NotRegisteredException {
@@ -179,10 +190,12 @@ public class TownBlock {
 	
 	
 	public void setType(TownBlockType type) {
-
 		if (type != this.type)
 			this.permissions.reset();
-		
+
+		if (type != null){
+			Bukkit.getPluginManager().callEvent(new PlotChangeTypeEvent(this.type, type));
+		}
 		this.type = type;
 
 		// Custom plot settings here
@@ -226,7 +239,12 @@ public class TownBlock {
 			
 		case WILDS:
 			
-			setPermissions("denyAll");
+			if (this.hasResident()) {
+				setPermissions(this.resident.permissions.toString());
+			} else {
+				setPermissions(this.town.permissions.toString());
+			}
+			
 			break;
 		
 		case SPLEEF:
@@ -239,6 +257,20 @@ public class TownBlock {
 			setPermissions("residentSwitch,allySwitch,outsiderSwitch");
 			break;
 			
+		case JAIL:
+			
+			setPermissions("denyAll");
+			break;
+		
+		case FARM:
+			
+			if (this.hasResident()) {
+				setPermissions(this.resident.permissions.toString());
+			} else {
+				setPermissions(this.town.permissions.toString());
+			}
+			
+			break;
 		}
 		
 		// Set the changed status.
@@ -254,14 +286,18 @@ public class TownBlock {
 	public void setType(String typeName) throws TownyException {
 
 		if (typeName.equalsIgnoreCase("reset"))
-			typeName = "default";
+			typeName = "default";					
 		
 		TownBlockType type = TownBlockType.lookup(typeName);
 		
 		if (type == null)
 			throw new TownyException(TownySettings.getLangString("msg_err_not_block_type"));
 		
+		if (this.isJail())
+			this.getTown().removeJailSpawn(this.getCoord());
+		
 		setType(type);
+		
 	}
 
 	public boolean isHomeBlock() {
@@ -369,5 +405,10 @@ public class TownBlock {
 	public boolean isWarZone() {
 
 		return getWorld().isWarZone(getCoord());
+	}
+
+	public boolean isJail() {
+
+		return this.getType() == TownBlockType.JAIL;
 	}
 }

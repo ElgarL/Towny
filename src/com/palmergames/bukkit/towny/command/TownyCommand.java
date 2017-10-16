@@ -27,6 +27,7 @@ import com.palmergames.bukkit.towny.object.TownyEconomyObject;
 import com.palmergames.bukkit.towny.object.TownyObject;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.permissions.PermissionNodes;
+import com.palmergames.bukkit.towny.war.eventwar.War;
 import com.palmergames.bukkit.util.ChatTools;
 import com.palmergames.bukkit.util.Colors;
 import com.palmergames.util.KeyValue;
@@ -77,10 +78,11 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 		towny_war.add(ChatTools.formatTitle("/towny war"));
 		towny_war.add(ChatTools.formatCommand("", "/towny war", "stats", ""));
 		towny_war.add(ChatTools.formatCommand("", "/towny war", "scores", ""));
+		towny_war.add(ChatTools.formatCommand("", "/towny war", "participants [page #]", ""));
+		towny_war.add(ChatTools.formatCommand("", "/towny war", "hud", ""));
 
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			System.out.println("[PLAYER_COMMAND] " + player.getName() + ": /" + commandLabel + " " + StringMgmt.join(args));
 			parseTownyCommand(player, args);
 		} else {
 			// Console output
@@ -94,10 +96,11 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("version") || args[0].equalsIgnoreCase("v"))
 				sender.sendMessage(Colors.strip(towny_version));
 			else if (args[0].equalsIgnoreCase("war")) {
-				boolean war = TownyWar(StringMgmt.remFirstArg(args));
-				for (String line : towny_war)
-					sender.sendMessage(Colors.strip(line));
-				if (!war)
+				boolean war = TownyWar(StringMgmt.remFirstArg(args), null);
+				if (war)
+					for (String line : towny_war)
+						sender.sendMessage(Colors.strip(line));
+				else
 					sender.sendMessage("The world isn't currently at war.");
 
 				towny_war.clear();
@@ -165,10 +168,11 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 			} else if (split[0].equalsIgnoreCase("version") || split[0].equalsIgnoreCase("v")) {
 				player.sendMessage(towny_version);
 			} else if (split[0].equalsIgnoreCase("war")) {
-				boolean war = TownyWar(StringMgmt.remFirstArg(split));
-				for (String line : towny_war)
-					player.sendMessage(Colors.strip(line));
-				if (!war)
+				boolean war = TownyWar(StringMgmt.remFirstArg(split), player);
+				if (war)
+					for (String line : towny_war)
+						player.sendMessage(Colors.strip(line));
+				else
 					sendErrorMsg(player, "The world isn't currently at war.");
 
 				towny_war.clear();
@@ -191,7 +195,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 	}
 
-	private boolean TownyWar(String[] args) {
+	private boolean TownyWar(String[] args, Player p) {
 
 		if (TownyUniverse.isWarTime() && args.length > 0) {
 			towny_war.clear();
@@ -199,11 +203,89 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 				towny_war.addAll(plugin.getTownyUniverse().getWarEvent().getStats());
 			else if (args[0].equalsIgnoreCase("scores"))
 				towny_war.addAll(plugin.getTownyUniverse().getWarEvent().getScores(-1));
+			else if (args[0].equalsIgnoreCase("participants")) {
+				try {
+					parseWarParticipants(p, args);
+				} catch (NotRegisteredException e) {
+				}
+				return true;
+			}
+			else if (args[0].equalsIgnoreCase("hud") && p == null)
+				towny_war.add("No hud for console!");
+			else if (args[0].equalsIgnoreCase("hud") && p != null) {
+				if (plugin.isPermissions() && TownyUniverse.getPermissionSource().has(p, PermissionNodes.TOWNY_COMMAND_TOWNY_WAR_HUD.getNode())) {
+					plugin.getHUDManager().toggleWarHUD(p);
+				} else {
+					TownyMessaging.sendErrorMsg(p, TownySettings.getLangString("msg_err_command_disable"));
+				}
+			}
 		}
 
 		return TownyUniverse.isWarTime();
 	}
 
+	@SuppressWarnings("null")
+	private void parseWarParticipants(Player player, String[] split) throws NotRegisteredException {
+
+		List<Town> townsToSort = War.warringTowns;
+		List<Nation> nationsToSort = War.warringNations;
+		int page = 1;
+		List<String> output = new ArrayList<String>();
+		String nationLine = null;
+		String townLine = null;
+		for (Nation nations : nationsToSort) {
+			nationLine = Colors.Gold + "-" + nations.getName().toString();
+			if (TownyUniverse.getDataSource().getResident(player.getName()).hasNation())
+				if (TownyUniverse.getDataSource().getResident(player.getName()).getTown().getNation().hasEnemy(nations))
+					nationLine += Colors.Red + " (Enemy)";
+				else if (TownyUniverse.getDataSource().getResident(player.getName()).getTown().getNation().hasAlly(nations))
+					nationLine += Colors.Green + " (Ally)";
+			output.add(nationLine);
+			for (Town towns : townsToSort) {
+				if (towns.getNation().equals(nations)) {
+					townLine = Colors.Blue +"  -" + towns.getName().toString();
+					if (towns.isCapital())
+						townLine += Colors.LightBlue + " (Capital)";
+					output.add(townLine);
+				}
+			}			
+		}
+		int total = (int) Math.ceil( (output.size()) / (double) 10 );		
+		if (split.length > 1) {
+			try {
+				page = Integer.parseInt(split[1]);
+				if (page < 0) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_err_negative"));
+					return;
+				} else if (page == 0) {
+					TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_error_must_be_int"));
+					return;
+				}
+			} catch (NumberFormatException e) {
+				TownyMessaging.sendErrorMsg(player, TownySettings.getLangString("msg_error_must_be_int"));
+				return;
+			}
+		}
+		if (page > total) {
+			TownyMessaging.sendErrorMsg(player, TownySettings.getListNotEnoughPagesMsg(total));
+			return;
+		}
+		
+		player.sendMessage(ChatTools.formatTitle("War Participants"));
+		player.sendMessage(Colors.Gold + "Nation Name" + Colors.Gray + " - " + Colors.Blue + "Town Names");
+
+		int iMax = page * 10;
+		if ((page * 10) > output.size()) {
+			iMax = output.size();
+		}
+		for (int i = (page - 1) * 10; i < iMax; i++) {
+			String line = output.get(i);
+			player.sendMessage(line);			
+		}
+		TownyMessaging.sendMessage(player, TownySettings.getListPageMsg(page, total));
+		output.clear();
+	}	
+	
 	private void TopCommand(Player player, String[] args) {
 
 		if (args.length == 0 || args[0].equalsIgnoreCase("?")) {
@@ -253,7 +335,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 		List<String> output = new ArrayList<String>();
 		output.add("\u00A70-\u00A74###\u00A70---\u00A74###\u00A70-");
 		output.add("\u00A74#\u00A7c###\u00A74#\u00A70-\u00A74#\u00A7c###\u00A74#\u00A70   \u00A76[\u00A7eTowny " + plugin.getVersion() + "\u00A76]");
-		output.add("\u00A74#\u00A7c####\u00A74#\u00A7c####\u00A74#   \u00A73By: \u00A7bChris H (Shade)/Llmdl/ElgarL");
+		output.add("\u00A74#\u00A7c####\u00A74#\u00A7c####\u00A74#   \u00A73By: \u00A7bChris H (Shade)/ElgarL/LlmDl");
 		output.add("\u00A70-\u00A74#\u00A7c#######\u00A74#\u00A70-");
 		output.add("\u00A70--\u00A74##\u00A7c###\u00A74##\u00A70-- " + "\u00A73Residents: \u00A7b" + Integer.toString(TownyUniverse.getDataSource().getResidents().size()) + Colors.Gray + " | " + "\u00A73Towns: \u00A7b" + Integer.toString(TownyUniverse.getDataSource().getTowns().size()) + Colors.Gray + " | " + "\u00A73Nations: \u00A7b" + Integer.toString(TownyUniverse.getDataSource().getNations().size()));
 		output.add("\u00A70----\u00A74#\u00A7c#\u00A74#\u00A70---- " + "\u00A73Worlds: \u00A7b" + Integer.toString(TownyUniverse.getDataSource().getWorlds().size()) + Colors.Gray + " | " + "\u00A73TownBlocks: \u00A7b" + Integer.toString(TownyUniverse.getDataSource().getAllTownBlocks().size()));
@@ -281,7 +363,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 	/*
 	 * [New] Town: 100 | Nation: 500 [Upkeep] Town: 10 | Nation: 100 Town
 	 * [Elden]: [Price] Plot: 100 | Outpost: 250 [Upkeep] Resident: 20 | Plot:
-	 * 50 Nation [Albion]: [Upkeep] Town: 100 | Neutrality: 100
+	 * 50 Nation [Albion]: [Upkeep] Town: 100 | Peace: 100
 	 */
 
 	// TODO: Proceduralize and make parse function for /towny prices [town]
@@ -301,7 +383,10 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 		output.add(ChatTools.formatTitle("Prices"));
 		output.add(Colors.Yellow + "[New] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNewTownPrice()) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNewNationPrice()));
-		output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeepCost(town)) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeepCost(nation)));
+		if (town != null)
+			output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeepCost(town)) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeepCost(nation)));
+		if (town == null)
+			output.add(Colors.Yellow + "[Upkeep] " + Colors.Green + "Town: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getTownUpkeep()) + Colors.Gray + " | " + Colors.Green + "Nation: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationUpkeep()));
 		output.add(Colors.Gray + "Town upkeep is based on " + Colors.LightGreen + " the " + (TownySettings.isUpkeepByPlot() ? " number of plots" : " town level (num residents)."));
 
 		if (town != null) {
@@ -311,10 +396,10 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 
 			output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Resident: " + Colors.LightGreen + Double.toString(town.getTaxes()) + (town.isTaxPercentage()? "%" : "") + Colors.Gray + " | " + Colors.Green + "Plot: " + Colors.LightGreen + Double.toString(town.getPlotTax()));
 			output.add(Colors.Rose + "            " + Colors.Green + "Shop: " + Colors.LightGreen + Double.toString(town.getCommercialPlotTax()) + Colors.Gray + " | " + Colors.Green + "Embassy: " + Colors.LightGreen + Double.toString(town.getEmbassyPlotTax()));
-			
+
 			if (nation != null) {
 				output.add(Colors.Yellow + "Nation [" + TownyFormatter.getFormattedName(nation) + "]");
-				output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Town: " + Colors.LightGreen + Double.toString(nation.getTaxes()) + Colors.Gray + " | " + Colors.Green + "Neutrality: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationNeutralityCost()));
+				output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Town: " + Colors.LightGreen + Double.toString(nation.getTaxes()) + Colors.Gray + " | " + Colors.Green + "Peace: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationNeutralityCost()));
 			}
 		}
 		return output;
@@ -328,7 +413,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 			kvTable.put(obj, obj.getHoldingBalance());
 		}
 		kvTable.sortByValue();
-		kvTable.revese();
+		kvTable.reverse();
 		int n = 0;
 		for (KeyValue<TownyEconomyObject, Double> kv : kvTable.getKeyValues()) {
 			n++;
@@ -347,7 +432,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 		for (ResidentList obj : list)
 			kvTable.put(obj, obj.getResidents().size());
 		kvTable.sortByValue();
-		kvTable.revese();
+		kvTable.reverse();
 		int n = 0;
 		for (KeyValue<ResidentList, Integer> kv : kvTable.getKeyValues()) {
 			n++;
@@ -366,7 +451,7 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 		for (TownBlockOwner obj : list)
 			kvTable.put(obj, obj.getTownBlocks().size());
 		kvTable.sortByValue();
-		kvTable.revese();
+		kvTable.reverse();
 		int n = 0;
 		for (KeyValue<TownBlockOwner, Integer> kv : kvTable.getKeyValues()) {
 			n++;
