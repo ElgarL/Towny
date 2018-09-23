@@ -10,7 +10,7 @@ import com.palmergames.bukkit.towny.war.flagwar.Cell;
 public class CellDefendedEvent extends Event implements Cancellable {
 
 	private static final HandlerList handlers = new HandlerList();
-	private boolean cancelled;
+	private boolean cancelled = false;;
 
 	@Override
 	public HandlerList getHandlers() {

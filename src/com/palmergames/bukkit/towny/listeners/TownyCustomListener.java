@@ -31,37 +31,38 @@ public class TownyCustomListener implements Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChangePlotEvent(PlayerChangePlotEvent event) {
+		if(!event.isCancelled()) {
+			Player player = event.getPlayer();
+			WorldCoord from = event.getFrom();
+			WorldCoord to = event.getTo();
 
-		Player player = event.getPlayer();
-		WorldCoord from = event.getFrom();
-		WorldCoord to = event.getTo();
+			// TODO: Player mode
+			if (plugin.hasPlayerMode(player, "townclaim"))
+				TownCommand.parseTownClaimCommand(player, new String[]{});
+			if (plugin.hasPlayerMode(player, "townunclaim"))
+				TownCommand.parseTownUnclaimCommand(player, new String[]{});
+			if (plugin.hasPlayerMode(player, "map"))
+				TownyCommand.showMap(player);
 
-		// TODO: Player mode
-		if (plugin.hasPlayerMode(player, "townclaim"))
-			TownCommand.parseTownClaimCommand(player, new String[] {});
-		if (plugin.hasPlayerMode(player, "townunclaim"))
-			TownCommand.parseTownUnclaimCommand(player, new String[] {});
-		if (plugin.hasPlayerMode(player, "map"))
-			TownyCommand.showMap(player);
+			// claim: attempt to claim area
+			// claim remove: remove area from town
 
-		// claim: attempt to claim area
-		// claim remove: remove area from town
-
-		// Check if player has entered a new town/wilderness
-		try {
-			if (to.getTownyWorld().isUsingTowny() && TownySettings.getShowTownNotifications()) {
-				ChunkNotification chunkNotifier = new ChunkNotification(from, to);
-				String msg = chunkNotifier.getNotificationString();
-				if (msg != null)
-					player.sendMessage(msg);
+			// Check if player has entered a new town/wilderness
+			try {
+				if (to.getTownyWorld().isUsingTowny() && TownySettings.getShowTownNotifications()) {
+					ChunkNotification chunkNotifier = new ChunkNotification(from, to);
+					String msg = chunkNotifier.getNotificationString();
+					if (msg != null)
+						player.sendMessage(msg);
+				}
+			} catch (NotRegisteredException e) {
+				e.printStackTrace();
 			}
-		} catch (NotRegisteredException e) {
-			e.printStackTrace();
-		}
 
-		if (plugin.hasPlayerMode(player, "plotborder")) {
-			CellBorder cellBorder = BorderUtil.getPlotBorder(to);
-			cellBorder.runBorderedOnSurface(1, 2, DrawSmokeTaskFactory.sendToPlayer(player));
+			if (plugin.hasPlayerMode(player, "plotborder")) {
+				CellBorder cellBorder = BorderUtil.getPlotBorder(to);
+				cellBorder.runBorderedOnSurface(1, 2, DrawSmokeTaskFactory.sendToPlayer(player));
+			}
 		}
 	}
 }

@@ -3,7 +3,6 @@ package com.palmergames.bukkit.towny.listeners;
 import java.util.Collections;
 import java.util.List;
 
-import net.citizensnpcs.api.CitizensAPI;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -380,7 +379,7 @@ public class TownyEntityListener implements Listener {
 
 				// Prevent creatures triggering stone pressure plates
 				if (TownySettings.isCreatureTriggeringPressurePlateDisabled()) {
-					if (block.getType() == Material.STONE_PLATE) {
+					if (block.getType() == Material.LEGACY_STONE_PLATE) {
 						if (entity instanceof Creature) {
 							event.setCancelled(true);
 							return;
