@@ -214,7 +214,7 @@ public class TownyBlockListener implements Listener {
 		//fetch the piston base
 		Block block = event.getBlock();
 
-		if (block.getType() != Material.PISTON_STICKY_BASE)
+		if (block.getType() != Material.LEGACY_PISTON_STICKY_BASE)
 			return;
 
 		//Get the block attached to the PISTON_EXTENSION of the PISTON_STICKY_BASE

@@ -50,6 +50,7 @@
 		</javac>
 	</target>
 
+	<property name="env.TOWNY_BUILD_VER" value=""/>
 	<target name="jar" depends="compile">
 		<!-- Update the version in the plugin.yml -->
 		<copy file="./src/plugin.yml" tofile="${build}/plugin.yml" overwrite="true" />
