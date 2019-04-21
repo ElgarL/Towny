@@ -42,12 +42,12 @@ public class ChatTools {
 			return color(prefix + line);
 		}
 
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 
 	public static List<String> wordWrap(String[] tokens) {
 
-		List<String> out = new ArrayList<String>();
+		List<String> out = new ArrayList<>();
 		out.add("");
 
 		for (String s : tokens) {
@@ -120,16 +120,20 @@ public class ChatTools {
 		return out;
 	}
 
-	public static void main(String[] args) {
-
-		String[] players = {
-				"dude", "bowie", "blarg", "sonbitch", "songoku", "pacman",
-				"link", "stacker", "hacker", "newb" };
-		for (String line : ChatTools.listArr(players))
-			System.out.println(line);
-
-		String testLine = "Loren Ipsum blarg voila tssssssh, boom wakka wakka \u00A7apacman on a boat bitch. From the boat union. Beata lingiushtically \u00A71nootchie lolk erness.";
-		for (String line : ChatTools.color(testLine))
-			System.out.println(line);
+	/**
+	 * @param title   - Title of the list,
+	 * @param subject - Subject of the listing.
+	 * @param list    - Any list that is in an order of ranking.
+	 * @param page    - Already formatted TownySettings.getListPageMsg(page,total) handler.
+	 * @return - Fully formatted output which should be sent to the player.
+	 * @author - Articdive
+	 */
+	public static String[] formatList(String title, String subject, List<String> list, String page) {
+		List<String> output = new ArrayList<>();
+		output.add(0, formatTitle(title));
+		output.add(1, subject);
+		output.addAll(list);
+		output.add(page);
+		return output.toArray(new String[0]);
 	}
 }

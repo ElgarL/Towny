@@ -62,7 +62,23 @@ public class GroupManagerSource extends TownyPermissionSource {
 		} else if (node == "suffix") {
 			group = handler.getGroupSuffix(handler.getPrimaryGroup(player.getName()));
 			user = handler.getUserSuffix(player.getName());
+		} else if (node == "userprefix") {
+			group = "";
+			user = handler.getUserSuffix(player.getName());					
+		} else if (node == "usersuffix") {
+			group = "";
+			user = handler.getUserSuffix(player.getName());					
+		} else if (node == "groupprefix") {
+			group = handler.getGroupPrefix(handler.getPrimaryGroup(player.getName()));
+			user = "";
+		} else if (node == "groupsuffix") {
+			group = handler.getGroupSuffix(handler.getPrimaryGroup(player.getName()));
+			user = "";
 		}
+		if (group == null) //Don't know why this null check wasn't being used, probably has a reason though
+			group = "";
+		if (user == null)
+			user = "";
 
 		if (!group.equals(user))
 			user = group + user;
@@ -93,6 +109,22 @@ public class GroupManagerSource extends TownyPermissionSource {
 		
 		return iReturn;
 
+	}
+	
+	@Override
+	public int getPlayerPermissionIntNode(String playerName, String node) {
+		
+		int iReturn = -1;
+		
+		Player player = BukkitTools.getPlayer(playerName);
+
+		AnjoPermissionsHandler handler = groupManager.getWorldsHolder().getWorldData(player).getPermissionsHandler();
+		iReturn  = handler.getPermissionInteger(playerName, node);
+		
+		if (iReturn == -1)
+			iReturn = getEffectivePermIntNode(playerName, node);
+		
+		return iReturn;
 	}
 
 	/**

@@ -1,12 +1,6 @@
-/**
- * 
- */
 package com.palmergames.bukkit.towny.tasks;
 
-import static com.palmergames.bukkit.towny.object.TownyObservableType.PLAYER_LOGIN;
-
-import org.bukkit.entity.Player;
-
+import com.earth2me.essentials.Essentials;
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyEconomyHandler;
 import com.palmergames.bukkit.towny.TownyMessaging;
@@ -20,6 +14,11 @@ import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.permissions.TownyPerms;
 import com.palmergames.bukkit.util.BukkitTools;
+
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
+import static com.palmergames.bukkit.towny.object.TownyObservableType.PLAYER_LOGIN;
 
 
 /**
@@ -35,8 +34,8 @@ public class OnPlayerLogin implements Runnable {
 	/**
 	 * Constructor
 	 * 
-	 * @param plugin
-	 * @param player
+	 * @param plugin - Towny plugin,
+	 * @param player - Player to run login code on.
 	 */
 	public OnPlayerLogin(Towny plugin, Player player) {
 		
@@ -59,7 +58,8 @@ public class OnPlayerLogin implements Runnable {
 				TownyUniverse.getDataSource().newResident(player.getName());
 				resident = TownyUniverse.getDataSource().getResident(player.getName());
 				
-				TownyMessaging.sendMessage(player, TownySettings.getRegistrationMsg(player.getName()));
+				if (TownySettings.isShowingRegistrationMessage())				
+					TownyMessaging.sendMessage(player, TownySettings.getRegistrationMsg(player.getName()));
 				resident.setRegistered(System.currentTimeMillis());
 				if (!TownySettings.getDefaultTownName().equals(""))
 					try {
@@ -85,7 +85,15 @@ public class OnPlayerLogin implements Runnable {
 			 */
 			try {
 				resident = TownyUniverse.getDataSource().getResident(player.getName());
-				resident.setLastOnline(System.currentTimeMillis());
+				if (TownySettings.isUsingEssentials()) {
+					Essentials ess = (Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+					/*
+					 * Don't update last online for a player who is vanished.
+					 */
+					if (!ess.getUser(player).isVanished())
+						resident.setLastOnline(System.currentTimeMillis());
+				} else
+					resident.setLastOnline(System.currentTimeMillis());
 
 				TownyUniverse.getDataSource().saveResident(resident);
 				
@@ -100,7 +108,14 @@ public class OnPlayerLogin implements Runnable {
 			
 			
 			try {
-				TownyMessaging.sendTownBoard(player, resident.getTown());
+				if (TownySettings.getShowTownBoardOnLogin()) {
+					TownyMessaging.sendTownBoard(player, resident.getTown());
+				}
+				if (TownySettings.getShowNationBoardOnLogin()) {
+					if (resident.getTown().hasNation())
+						TownyMessaging.sendNationBoard(player, resident.getTown().getNation());
+				}
+				resident.getTown(); // Exception check, this does not do anything at all!
 			} catch (NotRegisteredException ex) {
 			}
 
@@ -121,7 +136,7 @@ public class OnPlayerLogin implements Runnable {
 	/**
 	 * Send a warning message if the town or nation is due to be deleted.
 	 * 
-	 * @param resident
+	 * @param resident - Resident to send the warning to.
 	 */
 	private void warningMessage(Resident resident) {
 

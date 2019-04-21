@@ -3,16 +3,18 @@ package com.palmergames.bukkit.towny.war.flagwar;
 import com.palmergames.bukkit.config.ConfigNodes;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.util.TimeTools;
+
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 
+import java.util.List;
 import java.util.Set;
 
 public class TownyWarConfig {
 
 	public static final DyeColor[] woolColors = new DyeColor[] {
 			DyeColor.LIME, DyeColor.GREEN, DyeColor.BLUE, DyeColor.CYAN,
-			DyeColor.LIGHT_BLUE, DyeColor.SILVER, DyeColor.WHITE,
+			DyeColor.LIGHT_BLUE, DyeColor.GRAY, DyeColor.WHITE,
 			DyeColor.PINK, DyeColor.ORANGE, DyeColor.RED };
 
 	private static Material flagBaseMaterial = null;
@@ -23,7 +25,7 @@ public class TownyWarConfig {
 
 	public static boolean isAffectedMaterial(Material material) {
 
-		return material == Material.WOOL || material == getFlagBaseMaterial() || material == getFlagLightMaterial() || material == getBeaconWireFrameMaterial();
+		return material == Material.LEGACY_WOOL || material == getFlagBaseMaterial() || material == getFlagLightMaterial() || material == getBeaconWireFrameMaterial();
 	}
 
 	public static DyeColor[] getWoolColors() {
@@ -154,6 +156,11 @@ public class TownyWarConfig {
 	public static boolean regenBlocksAfterExplosionInWarZone() {
 
 		return TownySettings.getBoolean(ConfigNodes.WAR_WARZONE_EXPLOSIONS_REGEN_BLOCKS);
+	}
+	
+	public static List<String> getExplosionsIgnoreList() {
+
+		return TownySettings.getStrArr(ConfigNodes.WAR_WARZONE_EXPLOSIONS_IGNORE_LIST);
 	}
 
 	public static double getWonTownblockReward() {

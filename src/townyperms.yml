@@ -17,6 +17,8 @@ nomad:
     - towny.command.towny.universe
     - towny.command.towny.version
     - towny.command.towny.war
+    - towny.command.town.online
+    - towny.command.town.here
     - towny.command.town.new
     - towny.command.town.join
     - towny.command.town.list
@@ -51,6 +53,7 @@ towns:
         - towny.command.plot.*
         - towny.claimed.owntown.*
         - towny.command.nation.new
+        - towny.outlaw.jailer
 
     ranks:
         # Ranks contain additional permissions residents will be
@@ -58,19 +61,24 @@ towns:
         assistant:
             - towny.tax_exempt
             - towny.command.town.claim.*
-            - towny.command.town.add
+            - towny.command.town.invite.add
             - towny.command.plot.*
             - towny.command.town.toggle.public
             - towny.claimed.owntown.switch.*
             # assistants are able to grant VIP and helper rank
             - towny.command.town.rank.vip
             - towny.command.town.rank.helper
+            - towny.outlaw.jailer
         helper:
-            towny.claimed.townowned.switch.*
+            - towny.claimed.townowned.switch.*
         donator:
             # Currently only an example rank holder with no extra permissions
         vip:
             - towny.cheat.bypass
+        # Sheriff rank is able to jail other town members.
+        sheriff:
+            - towny.command.town.toggle.jail
+            - towny.outlaw.jailer
             
 # This section of permissions covers players who are members of any town in a nation.
 nations:
@@ -78,8 +86,10 @@ nations:
         # All nation members get these permissions.
         - towny.command.nation.online
         - towny.command.nation.deposit
+        - towny.command.nation.spawn
+        - towny.nation.spawn.nation
+        - towny.nation.spawn.ally
         - towny.town.spawn.nation
-        - towny.town.spawn.ally
         - towny.chat.nation
     king:
         # Kings get these permissions in addition to the default set.
@@ -88,8 +98,8 @@ nations:
     ranks:
         assistant:
             - towny.command.nation.rank.helper
-            - towny.command.nation.add
-            - towny.command.nation.ally
+            - towny.command.nation.invite.add
+            - towny.command.nation.ally.*
             - towny.command.nation enemy
         helper:
             - towny.command.nation.add

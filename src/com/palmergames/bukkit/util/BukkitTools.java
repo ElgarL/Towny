@@ -24,6 +24,8 @@ import org.bukkit.scheduler.BukkitScheduler;
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownySettings;
 
+import de.themoep.idconverter.IdMappings;
+
 /**
  * A class of functions related to Bukkit in general.
  * 
@@ -48,7 +50,6 @@ public class BukkitTools {
 	 * 
 	 * @return array of online players
 	 */
-	@SuppressWarnings("deprecation")
 	public static Collection<? extends Player> getOnlinePlayers() {
 		return getServer().getOnlinePlayers();
 	}
@@ -62,19 +63,7 @@ public class BukkitTools {
 	}
 	
 	public static Player getPlayer(String playerId) {
-		
 		return getServer().getPlayer(playerId);
-		
-//		if (playerId.length() < 36) {
-//			
-//			return getServer().getPlayer(playerId);
-//			
-//		} else {
-//			
-//			return getServer().getPlayer(UUID.fromString(playerId));
-//			
-//		}
-		
 	}
 	
 	/**
@@ -84,19 +73,7 @@ public class BukkitTools {
 	 * @return a true value if online
 	 */
 	public static boolean isOnline(String playerId) {
-		
 		return getServer().getPlayer(playerId) != null;
-		
-//		if (playerId.length() < 36) {
-//			
-//			return getServer().getPlayer(playerId) != null;
-//			
-//		} else {
-//			
-//			return getServer().getPlayer(UUID.fromString(playerId)) != null;
-//			
-//		}	
-		
 	}
 	
 	public static List<World> getWorlds() {
@@ -187,12 +164,9 @@ public class BukkitTools {
 	}
 	
 	
-	
 	/*
 	 * Block handling Methods.
 	 */
-
-	
 	
 	/**
 	 * Find a block at a specific offset.
@@ -207,49 +181,39 @@ public class BukkitTools {
 
 		return block.getWorld().getBlockAt(block.getX() + xOffset, block.getY() + yOffset, block.getZ() + zOffset);
 	}
-	
+
+	// Will be removed completely when the new plotsnapshot system is made.
+	@Deprecated
 	public static int getTypeId(Block block) {
-		
-		return block.getTypeId();
-	}
-	
+		return block.getType().getId();
+	}	
+	// Will be removed completely when the new plotsnapshot system is made.
+	@Deprecated
 	public static byte getData(Block block) {
-		
 		return block.getData();
 	}
-	
+	// No Longer Used, used to be used in PlotBlockData's restorenextblock.
+	@Deprecated
 	public static void setTypeIdAndData(Block block, int type, byte data, boolean applyPhysics) {
-		
-		block.setTypeIdAndData(type, data, applyPhysics);
-		
+		Material mat = Material.getMaterial(IdMappings.getById(String.format("%s:%s", type, data)).getFlatteningType());
+		block.setType(mat, applyPhysics);		
 	}
-	
+	// No Longer Used, used to be used in PlotBlockData's restorenextblock.
+	@Deprecated
 	public static void setTypeId(Block block, int type, boolean applyPhysics) {
-		
-		block.setTypeId(type, applyPhysics);
+		Material mat = Material.getMaterial(IdMappings.getById(String.valueOf(type)).getFlatteningType());
+		block.setType(mat, applyPhysics);
 	}
-	
-	public static void setData(Block block, byte data, boolean applyPhysics) {
 		
-		block.setData(data, applyPhysics);
-	}
-	
 	
 	/*
 	 * BlockState Methods
 	 */
-	
-	
+
 	public static Material getType(BlockState state) {
 		
 		return state.getType();
 	}
-	
-	public static int getTypeId(BlockState state) {
-		
-		return state.getTypeId();
-	}
-	
 	
 	public static MaterialData getData(BlockState state) {
 		
@@ -266,12 +230,6 @@ public class BukkitTools {
 	 * Item Handling Methods
 	 */
 	
-	
-	public static int getTypeId(ItemStack stack) {
-		
-		return stack.getTypeId();
-	}
-	
 	public static MaterialData getData(ItemStack stack) {
 		
 		return stack.getData();
@@ -287,17 +245,16 @@ public class BukkitTools {
 	 * Material handling Methods.
 	 */
 	
-	
-	
 	/**
 	 * Find a Material from an Id.
+	 * Helpfully using Phoenix616's useful IdConverter.jar
+	 * https://www.spigotmc.org/resources/id-converter.52099/
 	 * 
 	 * @param id
 	 * @return
 	 */
 	public static Material getMaterial(int id) {
-		
-		return Material.getMaterial(id);
+		return Material.getMaterial(IdMappings.getById(String.valueOf(id)).getFlatteningType());
 	}
 	
 	/**
@@ -317,6 +274,7 @@ public class BukkitTools {
 	 * @param material
 	 * @return
 	 */
+	@Deprecated
 	public static int getMaterialId(Material material) {
 		
 		return material.getId();

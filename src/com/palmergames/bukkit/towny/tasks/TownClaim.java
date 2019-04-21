@@ -1,21 +1,16 @@
 package com.palmergames.bukkit.towny.tasks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.confirmations.ConfirmationHandler;
+import com.palmergames.bukkit.towny.confirmations.ConfirmationType;
 import com.palmergames.bukkit.towny.event.TownClaimEvent;
 import com.palmergames.bukkit.towny.event.TownUnclaimEvent;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
+import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
@@ -24,6 +19,13 @@ import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.bukkit.towny.regen.PlotBlockData;
 import com.palmergames.bukkit.towny.regen.TownyRegenAPI;
 import com.palmergames.bukkit.util.BukkitTools;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author ElgarL
@@ -67,7 +69,6 @@ public class TownClaim extends Thread {
 		List<TownyWorld> worlds = new ArrayList<TownyWorld>();
 		List<Town> towns = new ArrayList<Town>();
 		TownyWorld world;
-
 		if (player != null)
 			TownyMessaging.sendMsg(player, "Processing " + ((claim) ? "Town Claim..." : "Town unclaim..."));
 
@@ -81,7 +82,7 @@ public class TownClaim extends Thread {
 						worlds.add(world);
 
 					if (claim) {
-						// Claim
+						// Claim						
 						townClaim(town, worldCoord, outpost);
 						// Reset so we only flag the first plot as an outpost.
 						outpost = false;
@@ -110,12 +111,28 @@ public class TownClaim extends Thread {
 				TownyMessaging.sendMsg(player, "Nothing to unclaim!");
 				return;
 			}
-			
-			townUnclaimAll(town);
+
+			Resident resident = null;
+			try {
+				resident = TownyUniverse.getDataSource().getResident(player.getName());
+			} catch (TownyException e) {
+				// Yeah the resident has to exist!
+			}
+			if (resident == null) {
+				return;
+			}
+			// Send confirmation message,
+			try {
+				ConfirmationHandler.addConfirmation(resident, ConfirmationType.UNCLAIMALL, null);
+				TownyMessaging.sendConfirmationMessage(player, null, null, null, null);
+			} catch (TownyException e) {
+				e.printStackTrace();
+				// Also shouldn't be possible if resident is parsed correctly, since this can only be run form /town unclaim all a.s.o
+			}
 		}
 
 		if (!towns.isEmpty())
-			for (Town test : towns)
+			for (Town test : towns) 
 				TownyUniverse.getDataSource().saveTown(test);
 
 		if (!worlds.isEmpty())
@@ -156,7 +173,7 @@ public class TownClaim extends Thread {
 			// Set the plot permissions to mirror the towns.
 			townBlock.setType(townBlock.getType());
 			if (isOutpost) {
-				townBlock.setOutpost(isOutpost);
+				townBlock.setOutpost(true); // set this to true to fineally find our problem!
 				town.addOutpostSpawn(outpostLocation);
 			}
 
@@ -166,19 +183,11 @@ public class TownClaim extends Thread {
 					TownyRegenAPI.deletePlotChunk(plotChunk); // just claimed so stop regeneration.
 					townBlock.setLocked(false);
 				} else {
-					//plotChunk = new PlotBlockData(townBlock); // Not regenerating so create a new snapshot.
-					//plotChunk.initialize();
 
-					// Push the TownBlock location to the queue for a snapshot.
 					TownyRegenAPI.addWorldCoord(townBlock.getWorldCoord());
 					townBlock.setLocked(true);
-
-					//TownyUniverse.getDataSource().saveTownBlock(townBlock);
 				}
-				//if (!plotChunk.getBlockList().isEmpty() && !(plotChunk.getBlockList() == null))
-				//	TownyRegenAPI.addPlotChunkSnapshot(plotChunk); // Save a snapshot.
-
-				plotChunk = null;
+				plotChunk = null;				
 			}
 
 			TownyUniverse.getDataSource().saveTownBlock(townBlock);
@@ -194,18 +203,26 @@ public class TownClaim extends Thread {
 
 		try {
 			final TownBlock townBlock = worldCoord.getTownBlock();
-			if (town != townBlock.getTown() && !force)
+			if (town != townBlock.getTown() && !force) {
 				throw new TownyException(TownySettings.getLangString("msg_area_not_own"));
+			}
+			if (!townBlock.isOutpost() && townBlock.hasTown()) {
+				if (TownyUniverse.isTownBlockLocContainedInTownOutposts(townBlock.getTown().getAllOutpostSpawns(), townBlock)) {
+					townBlock.setOutpost(true);
+				}
+			}
 
 			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 
 				@Override
 				public void run() {
 
+					
 					TownyUniverse.getDataSource().removeTownBlock(townBlock);
 					
 					// Raise an event to signal the unclaim
-					BukkitTools.getPluginManager().callEvent(new TownUnclaimEvent(town, worldCoord));
+					// As of 0.91.4.3 we are doing this inside of the removeTownBlock code to support more types of unclaiming.
+					//BukkitTools.getPluginManager().callEvent(new TownUnclaimEvent(town, worldCoord));
 				}
 			}, 1);
 
@@ -214,7 +231,7 @@ public class TownClaim extends Thread {
 		}
 	}
 
-	private void townUnclaimAll(final Town town) {
+	public static void townUnclaimAll(Towny plugin, final Town town) {
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 

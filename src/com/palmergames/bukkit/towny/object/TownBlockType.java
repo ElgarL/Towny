@@ -37,20 +37,22 @@ public enum TownBlockType {
 	},
 	INN(6, "Inn", "I") {	//Allows use of beds outside your own plot.
 	},
+	JAIL(7, "Jail", "J") {	//Enables setting the jail spawn.		
+	},
+	FARM(8, "Farm", "F") {	//Follows wilderness protection settings, but town owned.
+	},
+	BANK(9, "Bank", "B") { // Enables depositing into town and nation banks, if that has been enabled in the config.		
+	}
 
-	// These are subject to change:
+	// These are subject to change, and may not necessarily be added:
 /*
- * PUBLIC(6, "") { // Will have it's own permission set
+ * PUBLIC(10, "") { // Will have it's own permission set
  * },
  * 
- * MINE(7, "") { // Will have it's own permission set within a y range
+ * MINE(11, "") { // Will have it's own permission set within a y range
  * },
  * 
- * HOTEL(8, "") { // Will stack multiple y-ranges and function like a micro town
- * },
- * 
- * JAIL(9, "") { // Where people will spawn when they die in enemy (neutral)
- * towns
+ * HOTEL(12, "") { // Will stack multiple y-ranges and function like a micro town
  * },
  */
 	;

@@ -1,16 +1,22 @@
 package com.palmergames.bukkit.towny.regen;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-
+import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.regen.block.BlockObject;
 import com.palmergames.bukkit.util.BukkitTools;
+
+import de.themoep.idconverter.IdMappings;
+import de.themoep.idconverter.IdMappings.IdType;
+
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.Directional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlotBlockData {
 
@@ -72,9 +78,11 @@ public class PlotBlockData {
 						list.add(BukkitTools.getTypeId(block));
 						list.add((int) BukkitTools.getData(block));
 						break;
-
+					case 3:
+						//TODO: Whole new regen system required. 
+						//Probably tied to using TownBlockSize of 16 (matching up to MC chunks which we can clone.
 					default:
-						list.add(BukkitTools.getTypeId(block));
+						list.add(block.getType().getId());
 					}
 
 				}
@@ -90,51 +98,66 @@ public class PlotBlockData {
 	public boolean restoreNextBlock() {
 
 		Block block = null;
-		int x, y, z, blockId, reverse, scale;
+		int x, y, z, reverse, scale;
 		int worldx = getX() * size, worldz = getZ() * size;
+		Material blockMat, mat;
 		BlockObject storedData;
 		World world = this.townBlock.getWorldCoord().getBukkitWorld();
 
 		if (!world.isChunkLoaded(BukkitTools.calcChunk(getX()), BukkitTools.calcChunk(getZ())))
 			return true;
 		
+		TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - Version " + version);
 		//Scale for the number of elements
 		switch (version) {
 
-		case 1:
-		case 2:
-			scale = 2;
-			break;
-
-		default:
-			scale = 1;
+			case 1:
+			case 2:
+				scale = 2;
+				break;
+	
+			default:
+				scale = 1;
 		}
 
 		reverse = (blockList.size() - blockListRestored) / scale;
-
+		
 		while (reverse > 0) {
-
+			
 			reverse--; //regen bottom up to stand a better chance of restoring tree's and plants.
 			y = height - (reverse % height);
 			x = (int) (reverse / height) % size;
 			z = ((int) (reverse / height) / size) % size;
 
 			block = world.getBlockAt(worldx + x, y, worldz + z);
-			blockId = BukkitTools.getTypeId(block);
-			storedData = getStoredBlockData((blockList.size() - 1) - blockListRestored);
+			blockMat = block.getType();
+			storedData = getStoredBlockData((blockList.size() - 1) - blockListRestored);			
 
+			TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - block " + block.toString());
+			TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - storedData.getTypeID() " + storedData.getTypeId());
+			TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - storedData.getData() " + storedData.getData());
+			if (storedData.getData() == 0) {
+				TownyMessaging.sendDebugMsg("IDmappings - " + Material.getMaterial(IdMappings.getById(String.valueOf(storedData.getTypeId())).getFlatteningType()));
+				mat = BukkitTools.getMaterial(storedData.getTypeId());
+			} else {
+				try {
+					mat = Material.getMaterial(IdMappings.getById(String.valueOf(storedData.getTypeId()+ ":" + storedData.getData() )).getFlatteningType());					
+				} catch (NullPointerException e) {
+					// Sometimes blocks facing causes null lookups, we fall back to the base material.
+					mat = Material.getMaterial(IdMappings.getById(String.valueOf(storedData.getTypeId())).getFlatteningType());
+				}
+			}
 			// Increment based upon number of elements
 			blockListRestored += scale;
+				
 
 			// If this block isn't correct, replace
 			// and return as done.
-			if ((blockId != storedData.getTypeId())) {
-
-				Material mat = BukkitTools.getMaterial(storedData.getTypeId());
-
-				if ((mat == null) || ((mat != null) && !this.townBlock.getWorld().isPlotManagementIgnoreIds(mat.name()))) {
-
-					//System.out.print("regen x: " + x + " y: " + y + " z: " + z + " ID: " + blockId); 
+			if (mat == null) {
+				TownyMessaging.sendErrorMsg("PlotBlockData:restoreNextBlock() - Material Null, skipping block.");
+			} else if (blockMat != mat) {
+				TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - blockMat " + blockMat.toString() + " doesn't match mat " + mat.toString());
+				if (!this.townBlock.getWorld().isPlotManagementIgnoreIds(mat.name(), storedData.getData())) {
 
 					try {
 						//restore based upon version
@@ -142,25 +165,24 @@ public class PlotBlockData {
 
 						case 1:
 						case 2:
-							BukkitTools.setTypeIdAndData(block, storedData.getTypeId(), storedData.getData(), false);
+							block.setType(mat, false);
 
 							break;
 						default:
-							BukkitTools.setTypeId(block, storedData.getTypeId(), false);
+							block.setType(mat, false);
 						}
 						
 					} catch (Exception e) {
-
+						TownyMessaging.sendErrorMsg("Exception in PlotBlockData.java - BlockID found in legacy plotsnapshot which could not be resolved to a Material. ");
 					}
 
-				} else {
-					
-					BukkitTools.setTypeId(block, 0, false);
-					
+				} else {					
+					block.setType(Material.AIR);					
 				}
 
 				return true;
 			}
+			TownyMessaging.sendDebugMsg("PlotBlockData:restoreNextBlock() - Blocks match, no replacing needed.");
 		}
 
 		// reset as we are finished with the regeneration

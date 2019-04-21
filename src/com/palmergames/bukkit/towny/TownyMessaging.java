@@ -1,11 +1,8 @@
 package com.palmergames.bukkit.towny;
 
-import java.util.List;
-
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
+import com.palmergames.bukkit.towny.invites.Invite;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.ResidentList;
@@ -14,6 +11,11 @@ import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.bukkit.util.ChatTools;
 import com.palmergames.bukkit.util.Colors;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.util.List;
 
 /**
  * Towny message handling class
@@ -226,8 +228,15 @@ public class TownyMessaging {
 		for (String line : lines) {
 			if (isPlayer) {
 				((Player) sender).sendMessage(line);
-			} else
+			} else if (sender instanceof CommandSender) {
 				((CommandSender) sender).sendMessage(line);
+			} else if (sender instanceof Resident) {
+				try {
+					TownyUniverse.getPlayer(((Resident) sender)).sendMessage(Colors.strip(line));
+				} catch (TownyException e) {
+					// No player exists
+				}
+			}
 		}
 	}
 
@@ -289,7 +298,12 @@ public class TownyMessaging {
 		TownyLogger.log.info(ChatTools.stripColour("[Global Message] " + line));
 		for (Player player : BukkitTools.getOnlinePlayers()) {
 			if (player != null)
-				player.sendMessage(line);
+				try {
+					if (TownyUniverse.getDataSource().getWorld(player.getLocation().getWorld().getName()).isUsingTowny())
+						player.sendMessage(line);
+				} catch (NotRegisteredException e) {
+					e.printStackTrace();
+				}
 		}
 	}
 
@@ -369,6 +383,20 @@ public class TownyMessaging {
 	}
 
 	/**
+	 * Send a message to All online residents of a town and log
+	 * with the [townname] prefixed to the beginning
+	 * 
+	 * @param town
+	 * @param line
+	 */
+	public static void sendPrefixedTownMessage(Town town, String line) {
+
+		TownyLogger.log.info(ChatTools.stripColour("[Town Msg] " + town.getName() + ": " + line));
+		for (Player player : TownyUniverse.getOnlinePlayers(town))
+			player.sendMessage(String.format(TownySettings.getLangString("default_town_prefix"), town.getName()) + line);
+	}
+
+	/**
 	 * Send a message to All online residents of a nation and log
 	 * 
 	 * @param nation
@@ -399,6 +427,20 @@ public class TownyMessaging {
 
 	/**
 	 * Send a message to All online residents of a nation and log
+	 * with the [nationname] prefixed to the beginning
+	 * 
+	 * @param nation
+	 * @param line
+	 */
+	public static void sendPrefixedNationMessage(Nation nation, String line) {
+
+		TownyLogger.log.info(ChatTools.stripColour("[Nation Msg] " + nation.getName() + ": " + line));
+		for (Player player : TownyUniverse.getOnlinePlayers(nation))
+			player.sendMessage(String.format(TownySettings.getLangString("default_nation_prefix"), nation.getName()) + line);
+	}
+
+	/**
+	 * Send a message to All online residents of a nation and log
 	 * 
 	 * @param nation
 	 * @param line
@@ -419,6 +461,18 @@ public class TownyMessaging {
 	public static void sendTownBoard(Player player, Town town) {
 
 		for (String line : ChatTools.color(Colors.Gold + "[" + town.getName() + "] " + Colors.Yellow + town.getTownBoard()))
+			player.sendMessage(line);
+	}
+	
+	/**
+	 * Send the nation board to a player (in yellow)
+	 * 
+	 * @param player
+	 * @param nation
+	 */
+	public static void sendNationBoard(Player player, Nation nation) {
+
+		for (String line : ChatTools.color(Colors.Gold + "[" + nation.getName() + "] " + Colors.Yellow + nation.getNationBoard()))
 			player.sendMessage(line);
 	}
 	
@@ -448,5 +502,101 @@ public class TownyMessaging {
 		for (Resident resident : town.getResidents())
 			if (BukkitTools.isOnline(resident.getName()))
 				sendMessage(resident,msg);
+	}
+	
+	/**
+	 * Send a message to all residents in the nation with the required mode
+	 * 
+	 * @param nation
+	 * @param msg
+	 * @param modeRequired
+	 */
+	public static void sendMessageToMode(Nation nation, String msg, String modeRequired) {
+
+		for (Resident resident : nation.getResidents())
+			if (BukkitTools.isOnline(resident.getName()))
+				sendMessage(resident,msg);
+	}
+	
+	/**
+	 * Send a Title and Subtitle to a resident
+	 * 
+	 * @param resident
+	 * @param title
+	 * @param subtitle
+	 * @throws TownyException
+	 */
+	public static void sendTitleMessageToResident(Resident resident, String title, String subtitle) throws TownyException {
+		Player player = TownyUniverse.getPlayer(resident);
+		player.sendTitle(title, subtitle, 10, 70, 10);
+	}
+	
+	/**
+	 * Send a Title and Subtitle to a town
+	 * 
+	 * @param town
+	 * @param title
+	 * @param subtitle
+	 */
+	public static void sendTitleMessageToTown(Town town, String title, String subtitle) {
+		for (Player player : TownyUniverse.getOnlinePlayers(town))
+			player.sendTitle(title, subtitle, 10, 70, 10);
+	}
+
+	/**
+	 * Send a Title and Subtitle to a nation
+	 *
+	 * @param nation   - Nation object
+	 * @param title    - Title
+	 * @param subtitle - Subtitle
+	 */
+	public static void sendTitleMessageToNation(Nation nation, String title, String subtitle) {
+		for (Player player : TownyUniverse.getOnlinePlayers(nation))
+			player.sendTitle(title, subtitle, 10, 70, 10);
+	}
+
+	public static void sendConfirmationMessage(Object player, String firstline, String confirmline, String cancelline, String lastline) {
+		if (firstline == null) {
+			firstline = ChatColor.DARK_GRAY + "[" + ChatColor.GRAY + "Confirmation" + ChatColor.DARK_GRAY + "] " + ChatColor.BLUE + TownySettings.getLangString("are_you_sure_you_want_to_continue");
+		}
+		if (confirmline == null) {
+			confirmline = ChatColor.GREEN + "          /" + TownySettings.getConfirmCommand();
+		}
+		if (cancelline == null) {
+			cancelline = ChatColor.GREEN + "          /" + TownySettings.getCancelCommand();
+		}
+		if (lastline != null && lastline.equals("")) {
+			String[] message = new String[]{firstline, confirmline, cancelline};
+			sendMessage(player, message);
+			return;
+		}
+		if (lastline == null) {
+			lastline = ChatColor.BLUE + TownySettings.getLangString("this_message_will_expire");
+			String[] message = new String[]{firstline, confirmline, cancelline, lastline};
+			sendMessage(player, message);
+		}
+	}
+
+	public static void sendRequestMessage(Object player, Invite invite) {
+		if (invite.getSender() instanceof Town) { // Town invited Resident
+			String firstline = ChatColor.DARK_GRAY + "[" + ChatColor.GRAY + "Invitation" + ChatColor.DARK_GRAY + "] " + ChatColor.BLUE + String.format(TownySettings.getLangString("you_have_been_invited_to_join2"), invite.getSender().getName());
+			String secondline = ChatColor.GREEN + "          /" + TownySettings.getAcceptCommand() + " " + invite.getSender().getName();
+			String thirdline = ChatColor.GREEN +  "          /" + TownySettings.getDenyCommand() + " " + invite.getSender().getName();
+			sendConfirmationMessage(player, firstline, secondline, thirdline, "");
+		}
+		if (invite.getSender() instanceof Nation) {
+			if (invite.getReceiver() instanceof Town) { // Nation invited Town
+				String firstline = ChatColor.DARK_GRAY + "[" + ChatColor.GRAY + "Invitation" + ChatColor.DARK_GRAY + "] " + ChatColor.BLUE + String.format(TownySettings.getLangString("you_have_been_invited_to_join2"), invite.getSender().getName());
+				String secondline = ChatColor.GREEN + "          /t invite accept " + invite.getSender().getName();
+				String thirdline = ChatColor.GREEN +  "          /t invite deny " + invite.getSender().getName();
+				sendConfirmationMessage(player, firstline, secondline, thirdline, "");
+			}
+			if (invite.getReceiver() instanceof Nation) { // Nation allied Nation
+				String firstline = ChatColor.DARK_GRAY + "[" + ChatColor.GRAY + "Invitation" + ChatColor.DARK_GRAY + "] " + ChatColor.BLUE + String.format(TownySettings.getLangString("you_have_been_requested_to_ally2"), invite.getSender().getName());
+				String secondline = ChatColor.GREEN + "          /n ally accept " + invite.getSender().getName();
+				String thirdline = ChatColor.GREEN +  "          /n ally deny " + invite.getSender().getName();
+				sendConfirmationMessage(player, firstline, secondline, thirdline, "");
+			}
+		}
 	}
 }

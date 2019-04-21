@@ -1,13 +1,11 @@
 package com.palmergames.bukkit.towny.permissions;
 
-import net.milkbowl.vault.chat.Chat;
-
-import org.bukkit.entity.Player;
-
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.util.BukkitTools;
+import net.milkbowl.vault.chat.Chat;
+import org.bukkit.entity.Player;
 
 public class VaultPermSource extends TownyPermissionSource {
 
@@ -30,14 +28,32 @@ public class VaultPermSource extends TownyPermissionSource {
 
 			// Pull prefix/suffix for both primary group and player
 			if ("prefix".equalsIgnoreCase(node)) {
-				if (!primaryGroup.isEmpty())
+				if (!primaryGroup.isEmpty()) {
 					groupPrefixSuffix = chat.getGroupPrefix(player.getWorld(), primaryGroup);
+				}
 				playerPrefixSuffix = chat.getPlayerPrefix(player);
-			}
-			else if ("suffix".equalsIgnoreCase(node)) {
-				if (!primaryGroup.isEmpty())
+			} else if ("suffix".equalsIgnoreCase(node)) {
+				if (!primaryGroup.isEmpty()) {
 					groupPrefixSuffix = chat.getGroupSuffix(player.getWorld(), primaryGroup);
+				}
 				playerPrefixSuffix = chat.getPlayerSuffix(player);
+			} else if (node == "userprefix") {
+				playerPrefixSuffix = chat.getPlayerPrefix(player);
+			} else if (node == "usersuffix") {
+				playerPrefixSuffix = chat.getPlayerSuffix(player);
+			} else if (node == "groupprefix") {
+				if (!primaryGroup.isEmpty()) {
+					groupPrefixSuffix = chat.getGroupPrefix(player.getWorld(), primaryGroup);
+				} else {
+					groupPrefixSuffix = "";
+				}
+
+			} else if (node == "groupsuffix") {
+				if (!primaryGroup.isEmpty()) {
+					groupPrefixSuffix = chat.getGroupSuffix(player.getWorld(), primaryGroup);
+				} else {
+					groupPrefixSuffix = "";
+				}
 			}
 
 			// Normalize
@@ -76,10 +92,29 @@ public class VaultPermSource extends TownyPermissionSource {
 		
 		return iReturn;
 	}
+	
+	@Override
+	public int getPlayerPermissionIntNode(String playerName, String node) {
+		
+		int iReturn = -1;
+		
+		Player player = BukkitTools.getPlayerExact(playerName);
+		
+		if (player != null) {
+			
+				iReturn = chat.getPlayerInfoInteger(player.getWorld(), player.getName(), node, -1);
+		}
+		
+		
+		if (iReturn == -1)
+			iReturn = getEffectivePermIntNode(playerName, node);
+		
+		return iReturn;
+	}
 
 	@Override
 	public String getPlayerGroup(Player player) {
-		String result = chat.getPrimaryGroup(player);
+		String result = chat.getPrimaryGroup(player.getWorld(), player.getName());
 		return result != null ? result : "";
 	}
 

@@ -25,7 +25,7 @@ public class TownyEconomyObject extends TownyObject {
 		}
 	}
 
-	private static final TownyServerAccount SERVER_ACCOUNT = new TownyServerAccount();
+	public static final TownyServerAccount SERVER_ACCOUNT = new TownyServerAccount();
 
 	/**
 	 * Tries to pay from the players holdings
@@ -54,7 +54,7 @@ public class TownyEconomyObject extends TownyObject {
 				if (amount > 0) {
 					return TownyEconomyHandler.subtract(getEconomyName(), amount, getBukkitWorld());
 				} else {
-					return TownyEconomyHandler.add(getEconomyName(), amount, getBukkitWorld());
+					return TownyEconomyHandler.add(getEconomyName(), Math.abs(amount), getBukkitWorld());
 				}
 		}
 		return false;

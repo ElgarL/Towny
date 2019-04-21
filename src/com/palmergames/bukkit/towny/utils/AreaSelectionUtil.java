@@ -1,8 +1,6 @@
 package com.palmergames.bukkit.towny.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
@@ -11,8 +9,12 @@ import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownBlockOwner;
+import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.util.StringMgmt;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AreaSelectionUtil {
 
@@ -37,6 +39,21 @@ public class AreaSelectionUtil {
 				}
 			} else if (args[0].equalsIgnoreCase("auto")) {
 				out = selectWorldCoordAreaRect(owner, pos, args);
+			} else if (args[0].equalsIgnoreCase("outpost")) {
+				TownBlock tb = pos.getTownBlock();
+				if (!tb.isOutpost() && tb.hasTown()) { // isOutpost(), only for mysql however, if we include this we can skip the outposts on flatfile so less laggy!
+					Town town = tb.getTown();
+					if (TownyUniverse.isTownBlockLocContainedInTownOutposts(town.getAllOutpostSpawns(), tb)) {
+						tb.setOutpost(true);
+						out.add(pos);
+					} else {
+						throw new TownyException(TownySettings.getLangString("msg_err_unclaim_not_outpost"));
+						// Lang String required.
+					}
+				}
+				if (tb.isOutpost()) { // flatfile skipper
+					out.add(pos);
+				}
 			} else {
 				try {
 					Integer.parseInt(args[0]);
@@ -64,6 +81,8 @@ public class AreaSelectionUtil {
 				} else if (owner instanceof Resident) {
 					available = TownySettings.getMaxResidentPlots((Resident) owner);
 				}
+				
+				
 
 				if (args[0].equalsIgnoreCase("auto")) {
 					// Attempt to select outwards until no town blocks remain
@@ -78,6 +97,10 @@ public class AreaSelectionUtil {
 						throw new TownyException(TownySettings.getLangString("msg_err_invalid_radius"));
 					}
 				}
+				if (r > TownySettings.getMaxClaimRadiusValue() && TownySettings.getMaxClaimRadiusValue() > 0) {
+					throw new TownyException(String.format(TownySettings.getLangString("msg_err_invalid_radius_number"),TownySettings.getMaxClaimRadiusValue()));
+				}
+					
 				if (r > 1000)
 					r = 1000;
 				for (int z = -r; z <= r; z++)
@@ -119,6 +142,11 @@ public class AreaSelectionUtil {
 						throw new TownyException(TownySettings.getLangString("msg_err_invalid_radius"));
 					}
 				}
+				
+				if (r > TownySettings.getMaxClaimRadiusValue() && TownySettings.getMaxClaimRadiusValue() > 0) {
+					throw new TownyException(String.format(TownySettings.getLangString("msg_err_invalid_radius_number"),TownySettings.getMaxClaimRadiusValue()));
+				}
+				
 				if (r > 1000)
 					r = 1000;
 				for (int z = -r; z <= r; z++)
@@ -133,6 +161,28 @@ public class AreaSelectionUtil {
 		return out;
 	}
 
+	/**
+	 * Returns a list containing only townblocks that can be claimed.
+	 * Filters out townblocks too close to other towns as set in the config.
+	 * 
+	 * @param selection
+	 * @return List of townblocks
+	 */
+	public static List<WorldCoord> filterInvalidProximityTownBlocks(List<WorldCoord> selection, Town town) {
+
+		List<WorldCoord> out = new ArrayList<WorldCoord>();		
+		for (WorldCoord worldCoord : selection)
+			try {
+				if (worldCoord.getTownyWorld().getMinDistanceFromOtherTownsPlots(worldCoord, town) >= TownySettings.getMinDistanceFromTownPlotblocks()) {
+					out.add(worldCoord);
+				} else {
+					TownyMessaging.sendDebugMsg("AreaSelectionUtil:filterInvalidProximity - Coord: " + worldCoord + " too close to another town." );					
+				}
+			} catch (NotRegisteredException e) {				
+			}
+		return out;
+	}
+	
 	/**
 	 * Returns a list containing only wilderness townblocks.
 	 * 

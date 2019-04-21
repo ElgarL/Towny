@@ -5,7 +5,6 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.db.TownyDataSource;
 import com.palmergames.bukkit.towny.db.TownyFlatFileSource;
-import com.palmergames.bukkit.towny.db.TownyHModFlatFileSource;
 import com.palmergames.bukkit.towny.db.TownySQLSource;
 import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
@@ -20,18 +19,33 @@ import com.palmergames.bukkit.towny.war.eventwar.War;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.bukkit.util.NameValidation;
 import com.palmergames.util.FileMgmt;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 import javax.naming.InvalidNameException;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
 
-import static com.palmergames.bukkit.towny.object.TownyObservableType.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static com.palmergames.bukkit.towny.object.TownyObservableType.PLAYER_LOGOUT;
+import static com.palmergames.bukkit.towny.object.TownyObservableType.TELEPORT_REQUEST;
+import static com.palmergames.bukkit.towny.object.TownyObservableType.WAR_CLEARED;
+import static com.palmergames.bukkit.towny.object.TownyObservableType.WAR_END;
+import static com.palmergames.bukkit.towny.object.TownyObservableType.WAR_SET;
+import static com.palmergames.bukkit.towny.object.TownyObservableType.WAR_START;
 
 public class TownyUniverse extends TownyObject {
 
@@ -44,12 +58,11 @@ public class TownyUniverse extends TownyObject {
 	
 	private static Towny plugin;
 
-	protected Hashtable<String, Resident> residents = new Hashtable<String, Resident>();
-	protected Hashtable<String, Town> towns = new Hashtable<String, Town>();
-	protected Hashtable<String, Nation> nations = new Hashtable<String, Nation>();
-	protected Hashtable<String, TownyWorld> worlds = new Hashtable<String, TownyWorld>();
+	protected Hashtable<String, Resident> residents = new Hashtable<>();
+	protected Hashtable<String, Town> towns = new Hashtable<>();
+	protected Hashtable<String, Nation> nations = new Hashtable<>();
+	protected Hashtable<String, TownyWorld> worlds = new Hashtable<>();
 
-	// private List<Election> elections;
 	private static TownyDataSource dataSource;
 	private static TownyPermissionSource permissionSource;
 	
@@ -96,6 +109,17 @@ public class TownyUniverse extends TownyObject {
 		}
 	}
 
+	public Location getNationSpawnLocation(Player player) throws TownyException {
+
+		try {
+			Resident resident = getDataSource().getResident(player.getName());
+			Nation nation = resident.getTown().getNation();
+			return nation.getNationSpawn();
+		} catch (TownyException x) {
+			throw new TownyException("Unable to get nation spawn location");
+		}
+	}
+
 	/**
 	 * Find a matching online player for this resident.
 	 * 
@@ -111,6 +135,22 @@ public class TownyUniverse extends TownyObject {
 					return player;
 		throw new TownyException(String.format("%s is not online", resident.getName()));
 	}
+	
+	/**
+	 * Find a matching online player for this resident.
+	 * 
+	 * @param resident
+	 * @return an online player UUID
+	 * @throws TownyException
+	 */
+	public static UUID getPlayerUUID(Resident resident) throws TownyException {
+
+		for (Player player : BukkitTools.getOnlinePlayers())
+			if (player != null)
+				if (player.getName().equals(resident.getName()))
+					return player.getUniqueId();
+		throw new TownyException(String.format("%s is not online", resident.getName()));
+	}
 
 	/**
 	 * Get a list of all online players matching the residents supplied.
@@ -120,7 +160,7 @@ public class TownyUniverse extends TownyObject {
 	 */
 	public static List<Player> getOnlinePlayers(ResidentList residents) {
 
-		ArrayList<Player> players = new ArrayList<Player>();
+		ArrayList<Player> players = new ArrayList<>();
 		for (Player player : BukkitTools.getOnlinePlayers())
 			if (player != null)
 				if (residents.hasResident(player.getName()))
@@ -136,7 +176,7 @@ public class TownyUniverse extends TownyObject {
 	 */
 	public static List<Player> getOnlinePlayers(Town town) {
 
-		ArrayList<Player> players = new ArrayList<Player>();
+		ArrayList<Player> players = new ArrayList<>();
 		for (Player player : BukkitTools.getOnlinePlayers())
 			if (player != null)
 				if (town.hasResident(player.getName()))
@@ -152,7 +192,7 @@ public class TownyUniverse extends TownyObject {
 	 */
 	public static List<Player> getOnlinePlayers(Nation nation) {
 
-		ArrayList<Player> players = new ArrayList<Player>();
+		ArrayList<Player> players = new ArrayList<>();
 		for (Town town : nation.getTowns())
 			players.addAll(getOnlinePlayers(town));
 		return players;
@@ -205,6 +245,26 @@ public class TownyUniverse extends TownyObject {
 		}
 
 	}
+	/**
+	 * getTownUUID
+	 *
+	 * returns the uuid of the Town this location lies within if no town is
+	 * registered it returns null
+	 *
+	 * @param loc
+	 * @return name of any town at this location, or null for none.
+	 */
+	public static UUID getTownUUID(Location loc) {
+
+		try {
+			WorldCoord worldCoord = new WorldCoord(getDataSource().getWorld(loc.getWorld().getName()).getName(), Coord.parseCoord(loc));
+			return worldCoord.getTownBlock().getTown().getUuid();
+		} catch (NotRegisteredException e) {
+			// No data so return null
+			return null;
+		}
+
+	}
 
 	/**
 	 * getTownBlock
@@ -217,8 +277,6 @@ public class TownyUniverse extends TownyObject {
 	 */
 	public static TownBlock getTownBlock(Location loc) {
 
-		TownyMessaging.sendDebugMsg("Fetching TownBlock");
-
 		try {
 			WorldCoord worldCoord = new WorldCoord(getDataSource().getWorld(loc.getWorld().getName()).getName(), Coord.parseCoord(loc));
 			return worldCoord.getTownBlock();
@@ -230,7 +288,7 @@ public class TownyUniverse extends TownyObject {
 
 	public List<Resident> getActiveResidents() {
 
-		List<Resident> activeResidents = new ArrayList<Resident>();
+		List<Resident> activeResidents = new ArrayList<>();
 		for (Resident resident : getDataSource().getResidents())
 			if (isActiveResident(resident))
 				activeResidents.add(resident);
@@ -245,18 +303,10 @@ public class TownyUniverse extends TownyObject {
 	public boolean loadSettings() {
 
 		try {
-			FileMgmt.checkFolders(new String[] {
-					getRootFolder(),
-					getRootFolder() + FileMgmt.fileSeparator() + "settings",
-					getRootFolder() + FileMgmt.fileSeparator() + "logs" }); // Setup the logs folder here as the logger will not yet be enabled.
-
 			TownySettings.loadConfig(getRootFolder() + FileMgmt.fileSeparator() + "settings" + FileMgmt.fileSeparator() + "config.yml", plugin.getVersion());
 			TownySettings.loadLanguage(getRootFolder() + FileMgmt.fileSeparator() + "settings", "english.yml");
 			TownyPerms.loadPerms(getRootFolder() + FileMgmt.fileSeparator() + "settings", "townyperms.yml");
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return false;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -284,6 +334,7 @@ public class TownyUniverse extends TownyObject {
 			// Set the new class for saving.
 			setDataSource(save);
 			getDataSource().initialize(plugin, this);
+			FileMgmt.checkFolders(new String[] {getRootFolder() + FileMgmt.fileSeparator() + "logs" }); // Setup the logs folder here as the logger will not yet be enabled.
 			try {
 				getDataSource().backup();
 				
@@ -311,6 +362,13 @@ public class TownyUniverse extends TownyObject {
 			return false;
 		}
 
+		File f = new File(plugin.getDataFolder(), "outpostschecked.txt");
+		if (!(f.exists())) {
+			for (Town town : getDataSource().getTowns()) {
+				TownySQLSource.validateTownOutposts(town);
+			}
+			plugin.saveResource("outpostschecked.txt", false);
+		}
 		return true;
 	}
 
@@ -326,6 +384,7 @@ public class TownyUniverse extends TownyObject {
 		return getDataSource().loadAll();
 	}
 	
+	
 	public String getRootFolder() {
 
 		if (plugin != null)
@@ -338,8 +397,7 @@ public class TownyUniverse extends TownyObject {
 
 		if (databaseType.equalsIgnoreCase("flatfile"))
 			setDataSource(new TownyFlatFileSource());
-		else if (databaseType.equalsIgnoreCase("flatfile-hmod"))
-			setDataSource(new TownyHModFlatFileSource());
+		// HMOD has been moved to legacy
 		else if ((databaseType.equalsIgnoreCase("mysql")) || (databaseType.equalsIgnoreCase("sqlite")) || (databaseType.equalsIgnoreCase("h2")))
 			setDataSource(new TownySQLSource(databaseType));
 		else
@@ -445,7 +503,7 @@ public class TownyUniverse extends TownyObject {
 	@Override
 	public List<String> getTreeString(int depth) {
 
-		List<String> out = new ArrayList<String>();
+		List<String> out = new ArrayList<>();
 		out.add(getTreeDepth(depth) + "Universe (" + getName() + ")");
 		if (plugin != null) {
 			out.add(getTreeDepth(depth + 1) + "Server (" + BukkitTools.getServer().getName() + ")");
@@ -475,7 +533,7 @@ public class TownyUniverse extends TownyObject {
 
 	public static List<Resident> getValidatedResidents(Object sender, String[] names) {
 
-		List<Resident> invited = new ArrayList<Resident>();
+		List<Resident> invited = new ArrayList<>();
 		for (String name : names) {
 			List<Player> matches = BukkitTools.matchPlayer(name);
 			if (matches.size() > 1) {
@@ -507,7 +565,7 @@ public class TownyUniverse extends TownyObject {
 
 	public static List<Resident> getOnlineResidents(Player player, String[] names) {
 
-		List<Resident> invited = new ArrayList<Resident>();
+		List<Resident> invited = new ArrayList<>();
 		for (String name : names) {
 			List<Player> matches = BukkitTools.matchPlayer(name);
 			if (matches.size() > 1) {
@@ -528,7 +586,7 @@ public class TownyUniverse extends TownyObject {
 
 	public static List<Resident> getOnlineResidents(ResidentList residentList) {
 
-		List<Resident> onlineResidents = new ArrayList<Resident>();
+		List<Resident> onlineResidents = new ArrayList<>();
 		for (Player player : BukkitTools.getOnlinePlayers()) {
 			if (player != null)
 				for (Resident resident : residentList.getResidents()) {
@@ -542,7 +600,7 @@ public class TownyUniverse extends TownyObject {
 	
 	public static List<Resident> getOnlineResidentsViewable(Player viewer, ResidentList residentList) {
 
-		List<Resident> onlineResidents = new ArrayList<Resident>();
+		List<Resident> onlineResidents = new ArrayList<>();
 		for (Player player : BukkitTools.getOnlinePlayers()) {
 			if (player != null) {
 				/*
@@ -563,7 +621,7 @@ public class TownyUniverse extends TownyObject {
 	public void requestTeleport(Player player, Location spawnLoc, double cost) {
 
 		try {
-			TeleportWarmupTimerTask.requestTeleport(getDataSource().getResident(player.getName().toLowerCase()), spawnLoc, cost);
+			TeleportWarmupTimerTask.requestTeleport(getDataSource().getResident(player.getName().toLowerCase()), spawnLoc);
 		} catch (TownyException x) {
 			TownyMessaging.sendErrorMsg(player, x.getMessage());
 		}
@@ -576,6 +634,12 @@ public class TownyUniverse extends TownyObject {
 		TeleportWarmupTimerTask.abortTeleportRequest(resident);
 	}
 
+	public static void jailTeleport(final Player player, final Location loc) {
+		
+		Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> player.teleport(loc, TeleportCause.PLUGIN),
+				TownySettings.getTeleportWarmupTime() * 20);
+	}
+	
 	public void addWarZone(WorldCoord worldCoord) {
 
 		try {
@@ -1205,6 +1269,23 @@ public class TownyUniverse extends TownyObject {
 	public String[] checkAndFilterArray(String[] arr) {
 
 		return NameValidation.checkAndFilterArray(arr);
+	}
+
+	/**
+	 * @author - Articdive
+	 * @param minecraftcoordinates - List of minecraft coordinates you should probably parse town.getAllOutpostSpawns()
+	 * @param tb - TownBlock to check if its contained..
+	 * @note - Pretty much this method checks if a townblock is contained within a list of locations.
+	 */
+	public static boolean isTownBlockLocContainedInTownOutposts(List<Location> minecraftcoordinates, TownBlock tb) {
+		if (minecraftcoordinates != null && tb != null) {
+			for (Location minecraftcoordinate : minecraftcoordinates) {
+				if (Coord.parseCoord(minecraftcoordinate).equals(tb.getCoord())) {
+					return true; // Yes the TownBlock is considered an outpost by the Town
+				}
+			}
+		}
+		return false;
 	}
 
 }

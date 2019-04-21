@@ -33,7 +33,7 @@ public class ChunkNotification {
 	public static String homeBlockNotification = Colors.LightBlue + "[Home]";
 	public static String outpostBlockNotification = Colors.LightBlue + "[Outpost]";
 	public static String forSaleNotificationFormat = Colors.Yellow + "[For Sale: %s]";
-	public static String plotTypeNotificationFormat = Colors.Gold + "[%s]";
+	public static String plotTypeNotificationFormat = Colors.Gold + "[%s]";	
 
 	/**
 	 * Called on Config load.
@@ -105,17 +105,17 @@ public class ChunkNotification {
 		}
 	}
 
-	public String getNotificationString() {
+	public String getNotificationString(Resident resident) {
 
 		if (notificationFormat.length() == 0)
 			return null;
-		List<String> outputContent = getNotificationContent();
+		List<String> outputContent = getNotificationContent(resident);
 		if (outputContent.size() == 0)
 			return null;
 		return String.format(notificationFormat, StringMgmt.join(outputContent, notificationSpliter));
 	}
 
-	public List<String> getNotificationContent() {
+	public List<String> getNotificationContent(Resident resident) {
 
 		List<String> out = new ArrayList<String>();
 		String output;
@@ -128,20 +128,25 @@ public class ChunkNotification {
 		output = getAreaPvPNotification();
 		if (output != null && output.length() > 0)
 			out.add(output);
-
-		output = getOwnerNotification();
-		if (output != null && output.length() > 0)
-			out.add(output);
-
 		
+		// Only show the owner of individual plots if they do not have this mode applied 
+		if (!resident.hasMode("ignoreplots")) {
+			output = getOwnerNotification();
+			if (output != null && output.length() > 0)
+				out.add(output);
+		}
+	
 		// Only adds this IF in town.
 		output = getTownPVPNotification();
 		if (output != null && output.length() > 0)
 			out.add(output);
 
-		output = getPlotNotification();
-		if (output != null && output.length() > 0)
-			out.add(output);
+		// Only show the names of plots if they do not have this mode applied
+		if (!resident.hasMode("ignoreplots")) {
+			output = getPlotNotification();
+			if (output != null && output.length() > 0)
+				out.add(output);
+		}
 
 		return out;
 	}
@@ -180,7 +185,11 @@ public class ChunkNotification {
 				&& !toWild) {
 			
 			if (toResident != null)
-				return String.format(ownerNotificationFormat, (toTownBlock.getName().isEmpty()) ? TownyFormatter.getFormattedName(toResident) : toTownBlock.getName());
+				if (TownySettings.isNotificationOwnerShowingNationTitles()) {
+					return String.format(ownerNotificationFormat, (toTownBlock.getName().isEmpty()) ? TownyFormatter.getFormattedResidentTitleName(toResident) : toTownBlock.getName());
+				} else {
+					return String.format(ownerNotificationFormat, (toTownBlock.getName().isEmpty()) ? TownyFormatter.getFormattedName(toResident) : toTownBlock.getName());
+				}
 			else
 				return  String.format(noOwnerNotificationFormat, (toTownBlock.getName().isEmpty()) ? TownySettings.getUnclaimedPlotName() : toTownBlock.getName());
 
@@ -192,7 +201,7 @@ public class ChunkNotification {
 
 		if (!toWild && ((fromWild) || ((toTownBlock.getPermissions().pvp != fromTownBlock.getPermissions().pvp) && !toTown.isPVP()))) {
 			try {
-				return String.format(areaTownPvPNotificationFormat, ((testWorldPVP() && ((!toTown.isAdminDisabledPVP() && (to.getTownyWorld().isForcePVP() || toTown.isPVP() || toTownBlock.getPermissions().pvp)))) ? Colors.Red + " (PvP)" : Colors.Green + "(No PVP)"));
+				return String.format(areaTownPvPNotificationFormat, ((testWorldPVP() && ((!toTown.isAdminDisabledPVP() && (to.getTownyWorld().isForcePVP() || toTown.isPVP() || toTownBlock.getPermissions().pvp)))) ? Colors.Red + "(PvP)" : Colors.Green + "(No PVP)"));
 			} catch (NotRegisteredException e) {
 				// Not a Towny registered world.
 			}
